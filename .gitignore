@@ -1,0 +1,6 @@
+/ios/iOS.xcodeproj/*.xcuserstate
+/ios/iOS.xcodeproj/xcuserdata/
+/ios/iOS.xcodeproj/project.xcworkspace/
+/api-server/supabase/
+/api-server/config.env
+/api-server/config.env.example
