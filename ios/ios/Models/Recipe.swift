@@ -26,7 +26,7 @@ struct Recipe: Codable {
     }
 }
 
-struct RecipeMaterial: Codable {
+struct RecipeMaterial: Codable, Hashable {
     let materialName: String
     let materialCount: String
     
