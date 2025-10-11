@@ -4,6 +4,9 @@ struct RecipeView: View {
     @State private var recipe: Recipe?
     @State private var isLoading = true
     @State private var errorMessage: String?
+    @State private var showHandsFreeSettings = false
+    @State private var voiceGuidanceEnabled = true
+    @State private var autoScrollEnabled = false
     
     var body: some View {
         NavigationView {
@@ -24,8 +27,9 @@ struct RecipeView: View {
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if let recipe = recipe {
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 16) {
+                    ZStack {
+                        ScrollView {
+                            VStack(alignment: .leading, spacing: 16) {
                             // レシピタイトルと画像
                             VStack(alignment: .leading, spacing: 8) {
                                 Text(recipe.title)
@@ -154,13 +158,112 @@ struct RecipeView: View {
                                     .cornerRadius(12)
                                 }
                             }
+                            }
+                            .padding()
                         }
-                        .padding()
+                        
+                        // ハンズフリーモード設定オーバーレイ
+                        if showHandsFreeSettings {
+                            VStack {
+                                Spacer()
+                                
+                                VStack(alignment: .leading, spacing: 16) {
+                                    HStack {
+                                        Image(systemName: "mic.fill")
+                                            .foregroundColor(.blue)
+                                        Text("ハンズフリーモード設定")
+                                            .font(.headline)
+                                            .fontWeight(.semibold)
+                                        Spacer()
+                                        Button(action: {
+                                            showHandsFreeSettings = false
+                                        }) {
+                                            Image(systemName: "xmark.circle.fill")
+                                                .foregroundColor(.gray)
+                                                .font(.title2)
+                                        }
+                                    }
+                                    
+                                    VStack(alignment: .leading, spacing: 12) {
+                                        // 自動スクロール設定
+                                        HStack {
+                                            VStack(alignment: .leading, spacing: 4) {
+                                                Text("自動スクロール")
+                                                    .font(.subheadline)
+                                                    .fontWeight(.medium)
+                                                Text("手順に合わせて自動でスクロールします")
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                            }
+                                            Spacer()
+                                            Toggle("", isOn: $autoScrollEnabled)
+                                                .labelsHidden()
+                                        }
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 8)
+                                        .background(Color.gray.opacity(0.1))
+                                        .cornerRadius(8)
+                                        
+                                        // 音声ガイダンス設定
+                                        HStack {
+                                            VStack(alignment: .leading, spacing: 4) {
+                                                Text("音声ガイダンス")
+                                                    .font(.subheadline)
+                                                    .fontWeight(.medium)
+                                                Text("料理の手順を音声で案内します")
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                            }
+                                            Spacer()
+                                            Toggle("", isOn: $voiceGuidanceEnabled)
+                                                .labelsHidden()
+                                        }
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 8)
+                                        .background(Color.gray.opacity(0.1))
+                                        .cornerRadius(8)
+                                    }
+                                    
+                                    // ハンズフリーモード開始ボタン
+                                    Button(action: {
+                                        // ハンズフリーモード開始の処理（実装なし）
+                                        showHandsFreeSettings = false
+                                    }) {
+                                        HStack {
+                                            Image(systemName: "play.fill")
+                                            Text("ハンズフリーモードを開始")
+                                        }
+                                        .font(.headline)
+                                        .foregroundColor(.white)
+                                        .frame(maxWidth: .infinity)
+                                        .padding()
+                                        .background(Color.blue)
+                                        .cornerRadius(12)
+                                    }
+                                }
+                                .padding(35)
+                                .background(Color.white)
+                                .clipShape(RoundedRectangle(cornerRadius: 16))
+                                .shadow(color: .gray.opacity(0.3), radius: 8, x: 0, y: -2)
+                            }
+                            .background(Color.black.opacity(0.3))
+                            .ignoresSafeArea()
+                        }
                     }
                 }
             }
             .navigationTitle("レシピ詳細")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: {
+                        showHandsFreeSettings.toggle()
+                    }) {
+                        Image(systemName: "mic.fill")
+                            .foregroundColor(.blue)
+                    }
+                }
+            }
         }
         .onAppear {
             loadMockData()
