@@ -31,7 +31,7 @@ final class SearchViewModel: ObservableObject {
     private func searchTitles(_ keyword: String) async {
         errorMessage = nil
         do {
-            var url = APIConfig.baseURL              // 例: http://localhost:8080
+            var url = APIConfig.baseURL      
             url.append(path: "search")
             url.append(path: "word")
             url.append(path: keyword)                // ← エンコードは append がやってくれる
