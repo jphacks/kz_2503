@@ -30,7 +30,8 @@ struct SearchView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
+        NavigationStack {
+            VStack(spacing: 0) {
             // ヘッダー
             HStack {
                 // プロフィール画像
@@ -180,7 +181,8 @@ struct SearchView: View {
                                             ingredients: recipe.recipeMaterial, // 実際の材料データを使用
                                             chefName: userInfo?.username ?? "ユーザー", // ユーザー名を表示
                                             imageUrl: imageUrl,
-                                            userIconUrl: userInfo?.icon.isEmpty == false ? userInfo?.icon : nil
+                                            userIconUrl: userInfo?.icon.isEmpty == false ? userInfo?.icon : nil,
+                                            recipeId: recipe.recipeId
                                         )
                                         .onAppear {
                                             print("🍽️ Recipe: \(recipe.title), Original URL: \(recipe.pictureUrl), Converted URL: \(imageUrl ?? "nil")")
@@ -255,6 +257,7 @@ struct SearchView: View {
                 BottomNavigationView()
             }
         )
+        }
     }
 }
 

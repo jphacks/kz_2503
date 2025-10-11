@@ -13,16 +13,30 @@ struct RecipeCardView: View {
     let chefName: String
     let imageUrl: String?
     let userIconUrl: String?
+    let recipeId: String?
     
-    init(title: String, ingredients: [String], chefName: String, imageUrl: String? = nil, userIconUrl: String? = nil) {
+    init(title: String, ingredients: [String], chefName: String, imageUrl: String? = nil, userIconUrl: String? = nil, recipeId: String? = nil) {
         self.title = title
         self.ingredients = ingredients
         self.chefName = chefName
         self.imageUrl = imageUrl
         self.userIconUrl = userIconUrl
+        self.recipeId = recipeId
     }
     
     var body: some View {
+        if let recipeId = recipeId {
+            NavigationLink(destination: RecipeView(recipeId: recipeId)) {
+                recipeCardContent
+            }
+            .buttonStyle(PlainButtonStyle())
+        } else {
+            recipeCardContent
+        }
+    }
+    
+    @ViewBuilder
+    private var recipeCardContent: some View {
         HStack(spacing: 12) {
             // 左側: コンテンツ
             VStack(alignment: .leading, spacing: 8) {

@@ -1,13 +1,21 @@
 import SwiftUI
 
 struct RecipeView: View {
-    @State private var recipe: Recipe?
+    let recipeId: String?
+    
+    @State private var recipe: RecipeDetailData?
     @State private var isLoading = true
     @State private var errorMessage: String?
     @State private var showHandsFreeSettings = false
     @State private var voiceGuidanceEnabled = true
     @State private var autoScrollEnabled = false
     @StateObject private var viewModel = HandsFreeViewModel()
+    
+    private let recipeDetailRepository = RecipeDetailRepository()
+    
+    init(recipeId: String? = nil) {
+        self.recipeId = recipeId
+    }
     
     // MARK: - Scroll State Properties
     @State private var currentScrollPosition: CGFloat = 0 // 現在のスクロール位置(オフセット)
@@ -39,7 +47,7 @@ struct RecipeView: View {
                     }
                 }
                 .onAppear {
-                    loadMockData()
+                    loadRecipeData()
                 }
         }
     }
@@ -76,7 +84,7 @@ struct RecipeView: View {
     
     // MARK: - Recipe Content View
     @ViewBuilder
-    private func recipeContentView(recipe: Recipe) -> some View {
+    private func recipeContentView(recipe: RecipeDetailData) -> some View {
         ScrollViewReader { proxy in
             ZStack {
                 // MARK: ScrollView Setup
@@ -261,7 +269,7 @@ struct RecipeView: View {
         }
         
         // 最大インデックス = レシピステップ数（0はトップ）
-        let maxStepIndex = recipe.recipeContent.count
+        let maxStepIndex = recipe.recipeContent?.count ?? 0
         var nextStepIndex = currentStepIndex
         
         switch request.direction {
@@ -354,10 +362,10 @@ struct RecipeView: View {
         // より正確には各アンカーの実際の位置を使用する必要があるが、
         // ここでは均等分割で近似
         if totalContentHeight > 0 {
-            let stepCount = recipe.recipeContent.count + 1 // +1 for the top section
+            let stepCount = (recipe.recipeContent?.count ?? 0) + 1 // +1 for the top section
             let estimatedStepHeight = totalContentHeight / CGFloat(stepCount)
             let estimatedStep = Int(round(position / estimatedStepHeight))
-            let clampedStep = max(0, min(recipe.recipeContent.count, estimatedStep))
+            let clampedStep = max(0, min(recipe.recipeContent?.count ?? 0, estimatedStep))
             
             if clampedStep != currentStepIndex {
                 print("【RecipeView】📍 ステップ位置を更新: \(currentStepIndex) → \(clampedStep)")
@@ -368,7 +376,7 @@ struct RecipeView: View {
     
     // MARK: - Recipe Content Body
     @ViewBuilder
-    private func recipeContentBody(recipe: Recipe) -> some View {
+    private func recipeContentBody(recipe: RecipeDetailData) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             // スクロールアンカー0（トップ）
             Color.clear.frame(height: 1).id("fixed_anchor_0")
@@ -390,13 +398,13 @@ struct RecipeView: View {
     }
     
     @ViewBuilder
-    private func recipeHeaderView(recipe: Recipe) -> some View {
+    private func recipeHeaderView(recipe: RecipeDetailData) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(recipe.title)
                 .font(.largeTitle)
                 .fontWeight(.bold)
             
-            AsyncImage(url: URL(string: recipe.pictureURL)) { phase in
+            AsyncImage(url: URL(string: recipe.pictureUrl)) { phase in
                 switch phase {
                 case .success(let image):
                     image.resizable().aspectRatio(contentMode: .fill)
@@ -411,7 +419,7 @@ struct RecipeView: View {
     }
     
     @ViewBuilder
-    private func recipePointView(recipe: Recipe) -> some View {
+    private func recipePointView(recipe: RecipeDetailData) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text("ポイント")
                 .font(.headline)
@@ -426,26 +434,26 @@ struct RecipeView: View {
     }
     
     @ViewBuilder
-    private func recipeServingView(recipe: Recipe) -> some View {
+    private func recipeServingView(recipe: RecipeDetailData) -> some View {
         HStack {
             Text("分量: \(recipe.servingCount)人分")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
             Spacer()
-            Text("ステータス: \(recipe.recipeStatus)")
+            Text("ステータス: \(recipe.status)")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
         }
     }
     
     @ViewBuilder
-    private func recipeMaterialsView(recipe: Recipe) -> some View {
+    private func recipeMaterialsView(recipe: RecipeDetailData) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("材料")
                 .font(.headline)
                 .fontWeight(.semibold)
             
-            ForEach(recipe.recipeMaterial, id: \.self) { material in
+            ForEach(recipe.recipeMaterial ?? [], id: \.materialName) { material in
                 HStack {
                     Text(material.materialName)
                         .font(.body)
@@ -460,13 +468,13 @@ struct RecipeView: View {
     }
     
     @ViewBuilder
-    private func recipeStepsView(recipe: Recipe) -> some View {
+    private func recipeStepsView(recipe: RecipeDetailData) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("作り方")
                 .font(.headline)
                 .fontWeight(.semibold)
             
-            ForEach(Array(recipe.recipeContent.enumerated()), id: \.element.step) { index, content in
+            ForEach(Array((recipe.recipeContent ?? []).enumerated()), id: \.element.step) { index, content in
                 VStack(spacing: 0) {
                     // 各ステップの前にスクロールアンカーを配置
                     Color.clear.frame(height: 1).id("fixed_anchor_\(index + 1)")
@@ -477,7 +485,7 @@ struct RecipeView: View {
     }
     
     @ViewBuilder
-    private func recipeStepView(content: RecipeContent, index: Int) -> some View {
+    private func recipeStepView(content: RecipeDetailContent, index: Int) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text("STEP \(content.step)")
@@ -487,7 +495,7 @@ struct RecipeView: View {
                 Spacer()
             }
             Text(content.description).font(.body)
-            if let pictureURL = content.pictureURL, !pictureURL.isEmpty {
+            if let pictureURL = content.pictureUrl, !pictureURL.isEmpty {
                 AsyncImage(url: URL(string: pictureURL)) { phase in
                     switch phase {
                     case .success(let image):
@@ -504,46 +512,30 @@ struct RecipeView: View {
         .cornerRadius(12)
     }
     
-    private func loadMockData() {
-        // バンドル内のリソースを確認（デバッグ用）
-        print("🔍 Bundle path:", Bundle.main.bundlePath)
-        print("🔍 Resource path:", Bundle.main.resourcePath ?? "nil")
-        
-        guard let url = Bundle.main.url(forResource: "mockRecipe", withExtension: "json") else {
-            errorMessage = "JSONファイルが見つかりません"
-            print("❌ JSONファイルが見つかりません")
-            isLoading = false
-            return
-        }
-        
-        print("✅ JSONファイルが見つかりました:", url.path)
-        
-        do {
-            let data = try Data(contentsOf: url)
-            print("✅ データ読み込み成功:", data.count, "bytes")
-            
-            let decoder = JSONDecoder()
-            // CodingKeysで明示的にマッピングしているため、keyDecodingStrategyは不要
-            recipe = try decoder.decode(Recipe.self, from: data)
-            print("✅ JSONデコード成功")
-            isLoading = false
-        } catch {
-            errorMessage = "データの読み込みに失敗しました: \(error.localizedDescription)"
-            print("❌ エラー詳細:", error)
-            if let decodingError = error as? DecodingError {
-                switch decodingError {
-                case .keyNotFound(let key, let context):
-                    print("❌ キーが見つかりません:", key.stringValue, "context:", context.debugDescription)
-                case .typeMismatch(let type, let context):
-                    print("❌ 型が一致しません:", type, "context:", context.debugDescription)
-                case .valueNotFound(let type, let context):
-                    print("❌ 値が見つかりません:", type, "context:", context.debugDescription)
-                case .dataCorrupted(let context):
-                    print("❌ データが破損しています:", context.debugDescription)
-                @unknown default:
-                    print("❌ 不明なデコードエラー")
+    private func loadRecipeData() {
+        // recipe_idが指定されている場合は、APIからデータを取得
+        if let recipeId = recipeId {
+            print("🔍 Loading recipe with ID: \(recipeId)")
+            Task {
+                let result = await recipeDetailRepository.getRecipeDetail(recipeId: recipeId)
+                
+                await MainActor.run {
+                    switch result {
+                    case .success(let recipeResponse):
+                        recipe = recipeResponse.recipe
+                        isLoading = false
+                        print("✅ Recipe loaded successfully: \(recipeResponse.recipe.title)")
+                    case .error(let message):
+                        errorMessage = message
+                        isLoading = false
+                        print("❌ Failed to load recipe: \(message)")
+                    }
                 }
             }
+        } else {
+            // recipe_idが指定されていない場合
+            print("🔍 No recipe ID specified")
+            errorMessage = "レシピIDが指定されていません"
             isLoading = false
         }
     }
