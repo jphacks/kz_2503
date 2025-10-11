@@ -1,5 +1,5 @@
 //
-//  LoginView.swift
+//  RegisterView.swift
 //  iOS
 //
 //  Created by 三ツ井渚 on 2025/10/11.
@@ -7,23 +7,23 @@
 
 import SwiftUI
 
-struct LoginView: View {
-    let userId: String
+struct RegisterView: View {
+    let email: String
     
     var body: some View {
         VStack(spacing: 30) {
             Spacer()
             
-            Text("ログイン画面")
+            Text("新規登録画面")
                 .font(.largeTitle)
                 .fontWeight(.medium)
                 .foregroundColor(.black)
             
-            Text("ユーザーID: \(userId)")
+            Text("メールアドレス: \(email)")
                 .font(.body)
                 .foregroundColor(.gray)
             
-            Text("ここにログイン機能を実装します")
+            Text("ここに新規登録機能を実装します")
                 .font(.body)
                 .foregroundColor(.black)
                 .multilineTextAlignment(.center)
@@ -32,13 +32,13 @@ struct LoginView: View {
             Spacer()
         }
         .background(Color.white)
-        .navigationTitle("ログイン")
+        .navigationTitle("新規登録")
         .navigationBarTitleDisplayMode(.inline)
     }
 }
 
 #Preview {
     NavigationStack {
-        LoginView(userId: "123")
+        RegisterView(email: "user@example.com")
     }
 }
