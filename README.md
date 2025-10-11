@@ -37,27 +37,32 @@
 
 ## 開発技術
 - iOS：Swift 5+ / SwiftUI
-- 外部API：
-- DB：MySQL
 - バックエンド：Go
 
 ### 活用した技術
-- DB：MySQL
-- 音声：AVFoundation（TTS）
+- クラウド：Supabase
+- Face Tracking：Vision Framework
 
 #### API・データ
-- 機械視覚：Vision（顔/目トラッキング、ウィンク推定）
 - ローカルDB：SwifData
+- クラウドDB：Supabase
+- API Server：Go
 
 #### フレームワーク・ライブラリ・モジュール
-* 
-* 
+- UIKit
+- SwiftUI
+- Speech Framework
+- 音声：AVFoundation（TTS）
+- AI：FandationModels
+- Face Tracking：Vision Framework
 
 #### デバイス
-* 
-* 
+* iPhone / iOS 26.0以上
 
 ### 独自技術
 #### ハッカソンで開発した独自機能・技術
-* 独自で開発したものの内容をこちらに記載してください
-* 特に力を入れた部分をファイルリンク、またはcommit_idを記載してください。
+- wink判定
+  - Vision Framework の目の高さをトラッキングする API を利用し、目の高さの変化から、ウィンクの動作を検知する。
+
+- AI友達料理サポート
+  - 常に音声を文字起こしし、特定の文字列が発生したときに、プロンプトとして AppleInterigence に送ることで、常に友達がいるかのようなサポートを提供する。
