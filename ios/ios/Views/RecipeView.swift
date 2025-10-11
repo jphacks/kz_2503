@@ -43,8 +43,9 @@ struct RecipeView: View {
                         Button(action: {
                             showHandsFreeSettings.toggle()
                         }) {
-                            Image(systemName: "mic.fill")
-                                .foregroundColor(.blue)
+                            Image(systemName: "hand.raised.slash.fill")
+                                .foregroundColor(.theme)
+                                .frame(width: 60)
                         }
                     }
                 }
@@ -179,7 +180,7 @@ struct RecipeView: View {
                 
                 VStack(alignment: .leading, spacing: 16) {
                     HStack {
-                        Image(systemName: "mic.fill").foregroundColor(.blue)
+                        Image(systemName: "hand.raised.slash.fill").foregroundColor(.theme)
                         Text("ハンズフリーモード設定").font(.headline).fontWeight(.semibold)
                         Spacer()
                         Button(action: { showHandsFreeSettings = false }) {
@@ -190,35 +191,36 @@ struct RecipeView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         // 自動スクロール設定
                         HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("自動スクロール").font(.subheadline).fontWeight(.medium)
-                                Text("ウィンクで自動スクロールします").font(.caption).foregroundColor(.secondary)
-                            }
                             Spacer()
+                            VStack(alignment: .trailing, spacing: 4) {
+                                Text("ウィンク操作").font(.subheadline).fontWeight(.medium)
+                                Text("ウィンクで画面をスクロールできます").font(.caption).foregroundColor(.secondary)
+                            }
                             Toggle("", isOn: $autoScrollEnabled).labelsHidden()
                                 .onChange(of: autoScrollEnabled) { _ in
                                     viewModel.autoScrollEnabled = autoScrollEnabled
                                     viewModel.updateCameraBasedOnSettings()
                                 }
                         }
-                        .padding(.horizontal, 12).padding(.vertical, 8)
-                        .background(Color(.systemGray6)).cornerRadius(8)
+                        .padding(.horizontal, 20).padding(.vertical, 8)
+                        .background(Color.clear).cornerRadius(8)
                         
                         // 音声入力設定
                         HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("音声入力").font(.subheadline).fontWeight(.medium)
-                                Text("音声を文字起こしします").font(.caption).foregroundColor(.secondary)
-                            }
                             Spacer()
+                            VStack(alignment: .trailing, spacing: 4) {
+                                Text("ウィンくんと会話").font(.subheadline).fontWeight(.medium)
+                                Text("音声入力でウィンくん(AI)と会話できます").font(.caption).foregroundColor(.secondary)
+                            }
+                            
                             Toggle("", isOn: $voiceInputEnabled).labelsHidden()
                                 .onChange(of: voiceInputEnabled) { _ in
                                     viewModel.voiceInputEnabled = voiceInputEnabled
                                     viewModel.updateCameraBasedOnSettings()
                                 }
                         }
-                        .padding(.horizontal, 12).padding(.vertical, 8)
-                        .background(Color(.systemGray6)).cornerRadius(8)
+                        .padding(.horizontal, 20).padding(.vertical, 8)
+                        .background(Color.clear).cornerRadius(8)
                     }
                     
                     // ハンズフリーモード開始ボタン
@@ -233,11 +235,11 @@ struct RecipeView: View {
                     }) {
                         HStack {
                             Image(systemName: "play.fill")
-                            Text((autoScrollEnabled || voiceInputEnabled) ? "ハンズフリーモードを開始" : "自動スクロールまたは音声入力を有効にしてください")
+                            Text((autoScrollEnabled || voiceInputEnabled) ? "ハンズフリーモードを開始" : "少なくとも1つを有効にしてください")
                                 .multilineTextAlignment(.center)
                         }
                         .font(.headline).foregroundColor(.white).frame(maxWidth: .infinity)
-                        .padding().background((autoScrollEnabled || voiceInputEnabled) ? Color.blue : Color.gray)
+                        .padding().background((autoScrollEnabled || voiceInputEnabled) ? Color.theme : Color.gray)
                         .cornerRadius(12)
                     }
                     .disabled(!autoScrollEnabled && !voiceInputEnabled)
@@ -365,6 +367,7 @@ struct RecipeView: View {
             HandsFreeControlView(
                 isHandsFreeModeOn: $viewModel.isHandsFreeModeOn,
                 isFaceDetected: viewModel.isFaceDetected,
+                autoScrollEnabled: viewModel.autoScrollEnabled,
                 onToggle: {
                     viewModel.toggleHandsFreeMode()
                 }
@@ -740,24 +743,28 @@ struct AIMessageBubble: View {
 struct HandsFreeControlView: View {
     @Binding var isHandsFreeModeOn: Bool
     let isFaceDetected: Bool
+    let autoScrollEnabled: Bool
     let onToggle: () -> Void
 
     var body: some View {
         VStack {
             if isHandsFreeModeOn {
                 VStack(spacing: 8) {
-                    Text(isFaceDetected ? "顔を認識中👀" : "顔を認識できません")
-                        .font(.headline)
-                        .padding(8)
-                        .background(.thinMaterial)
-                        .cornerRadius(8)
+                    // ウィンク操作が有効な場合のみ顔認識メッセージを表示
+                    if autoScrollEnabled {
+                        Text(isFaceDetected ? "顔を認識中👀" : "顔を認識できません")
+                            .font(.headline)
+                            .padding(8)
+                            .background(.thinMaterial)
+                            .cornerRadius(8)
+                    }
                 }
                 .padding(.bottom, 8)
                 
                 Button(action: onToggle) {
                     Text("ハンズフリーモード OFF")
                         .fontWeight(.bold)
-                        .padding()
+                        .padding(20)
                         .frame(maxWidth: .infinity)
                         .background(Color.red)
                         .foregroundColor(.white)
@@ -810,6 +817,10 @@ struct ScrollOffsetPreferenceKey: PreferenceKey {
 }
 
 #Preview {
-    RecipeView()
+    RecipeView(recipeId: "123e4567-e89b-12d3-a456-426614174001")
 }
+
+//#Preview{
+//    AIMessageBubble(message: AIMessage)
+//}
 
