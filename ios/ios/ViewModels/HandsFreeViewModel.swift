@@ -88,11 +88,33 @@ class HandsFreeViewModel: NSObject, ObservableObject {
         }
     }
     
+    /// 設定変更時の処理（自動スクロールのON/OFF切り替え時）
+    func updateCameraBasedOnSettings() {
+        guard isHandsFreeModeOn else { return }
+        
+        if autoScrollEnabled {
+            // 自動スクロールがONになった場合、カメラを起動
+            if !cameraService.isSessionRunning {
+                cameraService.startSession()
+                startTrackingStatusTimer()
+            }
+        } else {
+            // 自動スクロールがOFFになった場合、カメラを停止
+            if cameraService.isSessionRunning {
+                cameraService.stopSession()
+                stopTrackingStatusTimer()
+                isFaceDetected = false
+            }
+        }
+    }
+    
     // MARK: - Private Methods
     private func startHandsFreeMode() {
-        // カメラを起動
-        cameraService.startSession()
-        startTrackingStatusTimer()
+        // カメラは自動スクロールがONの時のみ起動
+        if autoScrollEnabled {
+            cameraService.startSession()
+            startTrackingStatusTimer()
+        }
         
         // ウィンク検出サービスの設定
         winkDetectionService.isEnabled = autoScrollEnabled // 自動スクロールがONの時のみウィンク検出を有効化

@@ -196,6 +196,10 @@ struct RecipeView: View {
                             }
                             Spacer()
                             Toggle("", isOn: $autoScrollEnabled).labelsHidden()
+                                .onChange(of: autoScrollEnabled) { _ in
+                                    viewModel.autoScrollEnabled = autoScrollEnabled
+                                    viewModel.updateCameraBasedOnSettings()
+                                }
                         }
                         .padding(.horizontal, 12).padding(.vertical, 8)
                         .background(Color(.systemGray6)).cornerRadius(8)
@@ -208,6 +212,10 @@ struct RecipeView: View {
                             }
                             Spacer()
                             Toggle("", isOn: $voiceInputEnabled).labelsHidden()
+                                .onChange(of: voiceInputEnabled) { _ in
+                                    viewModel.voiceInputEnabled = voiceInputEnabled
+                                    viewModel.updateCameraBasedOnSettings()
+                                }
                         }
                         .padding(.horizontal, 12).padding(.vertical, 8)
                         .background(Color(.systemGray6)).cornerRadius(8)
@@ -304,7 +312,8 @@ struct RecipeView: View {
     private var handsFreeControlsView: some View {
         VStack {
             HStack {
-                if viewModel.isHandsFreeModeOn {
+                // カメラ映像は自動スクロールがONの時のみ表示
+                if viewModel.isHandsFreeModeOn && viewModel.autoScrollEnabled {
                     CameraView(cameraService: viewModel.cameraService)
                         .frame(width: 100, height: 150)
                         .cornerRadius(10)
