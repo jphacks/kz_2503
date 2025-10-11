@@ -45,6 +45,18 @@ func (r *MockRepository) GetUser(userID string) (*models.User, error) {
 	return &user, nil
 }
 
+func (r *MockRepository) GetUserByEmail(email string) (*models.User, error) {
+	r.data.Mu.RLock()
+	defer r.data.Mu.RUnlock()
+
+	for _, user := range r.data.Users {
+		if user.MailAddress == email {
+			return &user, nil
+		}
+	}
+	return nil, fmt.Errorf("user not found")
+}
+
 func (r *MockRepository) UpdateUser(userID string, updates map[string]interface{}) error {
 	r.data.Mu.Lock()
 	defer r.data.Mu.Unlock()
@@ -419,7 +431,7 @@ func (r *MockRepository) SearchByWord(word string) ([]models.RecipeSummary, erro
 			})
 			continue
 		}
-		
+
 		// 材料名で検索
 		for _, material := range recipe.RecipeMaterial {
 			if strings.Contains(material.MaterialName, word) {

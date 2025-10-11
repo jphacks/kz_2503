@@ -145,6 +145,40 @@ func (r *SupabaseRepository) GetUser(userID string) (*models.User, error) {
 	return nil, fmt.Errorf("user not found")
 }
 
+func (r *SupabaseRepository) GetUserByEmail(email string) (*models.User, error) {
+	endpoint := fmt.Sprintf("%s/rest/v1/users?mail_address=eq.%s", r.baseURL, email)
+	results, err := r.makeRequest("GET", endpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+	if len(results) > 0 {
+		userData := results[0]
+		user := models.User{
+			UserID:       userData["id"].(string),
+			Username:     userData["username"].(string),
+			PasswordHash: userData["password_hash"].(string),
+			MailAddress:  userData["mail_address"].(string),
+		}
+		if profile, ok := userData["profile"].(string); ok {
+			user.Profile = profile
+		}
+		if icon, ok := userData["icon"].(string); ok {
+			user.Icon = icon
+		}
+		if isWink, ok := userData["is_wink"].(bool); ok {
+			user.IsWink = isWink
+		}
+		if location, ok := userData["location"].(string); ok {
+			user.Location = location
+		}
+		if isAI, ok := userData["is_ai"].(bool); ok {
+			user.IsAI = isAI
+		}
+		return &user, nil
+	}
+	return nil, fmt.Errorf("user not found")
+}
+
 func (r *SupabaseRepository) UpdateUser(userID string, updates map[string]interface{}) error {
 	endpoint := fmt.Sprintf("%s/rest/v1/users?id=eq.%s", r.baseURL, userID)
 	_, err := r.makeRequest("PATCH", endpoint, updates)
@@ -587,7 +621,7 @@ func (r *SupabaseRepository) SearchByWord(word string) ([]models.RecipeSummary, 
 	if err != nil {
 		return nil, err
 	}
-	
+
 	var recipes []models.RecipeSummary
 	for _, result := range results {
 		// タイトルで検索
@@ -604,7 +638,7 @@ func (r *SupabaseRepository) SearchByWord(word string) ([]models.RecipeSummary, 
 			})
 			continue
 		}
-		
+
 		// 材料名で検索（材料テーブルから該当するrecipe_idを取得）
 		recipeID := result["id"].(string)
 		materialEndpoint := fmt.Sprintf("%s/rest/v1/recipe_materials?recipe_id=eq.%s", r.baseURL, recipeID)
@@ -612,7 +646,7 @@ func (r *SupabaseRepository) SearchByWord(word string) ([]models.RecipeSummary, 
 		if err != nil {
 			continue // 材料取得でエラーが発生しても続行
 		}
-		
+
 		// 材料名に検索語が含まれているかチェック
 		for _, materialResult := range materialResults {
 			materialName := materialResult["material_name"].(string)
@@ -630,7 +664,7 @@ func (r *SupabaseRepository) SearchByWord(word string) ([]models.RecipeSummary, 
 			}
 		}
 	}
-	
+
 	return recipes, nil
 }
 

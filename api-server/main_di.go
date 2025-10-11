@@ -84,6 +84,7 @@ func main() {
 	{
 		user.POST("", handlers.CreateUser)
 		user.GET("/:user_id", handlers.GetUser)
+		user.GET("/email/:email", handlers.GetUserByEmail)
 		user.DELETE("/:user_id", handlers.DeleteUser)
 		user.POST("/login", handlers.LoginUser)
 		user.PATCH("/profile/:user_id", handlers.UpdateUserProfile)
