@@ -249,6 +249,42 @@ struct RecipeView: View {
                         .padding()
                 }
                 Spacer()
+                
+                // 最新の音声テキストの表示
+                if viewModel.isHandsFreeModeOn && viewModel.voiceInputEnabled, let latestText = viewModel.latestVoiceText {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Image(systemName: "mic.fill")
+                                .font(.caption)
+                                .foregroundColor(.white)
+                            Text("音声入力")
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.white)
+                            Spacer()
+                            Button(action: {
+                                viewModel.clearLatestVoiceText()
+                            }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.white.opacity(0.8))
+                                    .font(.caption)
+                            }
+                        }
+                        
+                        Text(latestText)
+                            .font(.subheadline)
+                            .foregroundColor(.white)
+                            .padding(8)
+                            .background(Color.white.opacity(0.2))
+                            .cornerRadius(8)
+                    }
+                    .padding(12)
+                    .frame(maxWidth: 250)
+                    .background(Color.blue.opacity(0.95))
+                    .cornerRadius(12)
+                    .shadow(radius: 5)
+                    .padding()
+                }
             }
             Spacer()
             HandsFreeControlView(

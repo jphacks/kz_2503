@@ -21,6 +21,7 @@ class HandsFreeViewModel: NSObject, ObservableObject {
     @Published var scrollRequest: ScrollRequest?
     @Published var voiceInputEnabled = false
     @Published var autoScrollEnabled = false // 自動スクロール（ウィンク検出）が有効かどうか
+    @Published var latestVoiceText: String? // 音声入力でキャプチャした最新の文章（1つのみ）
     
     // MARK: - Services
     let cameraService = CameraService()
@@ -65,6 +66,13 @@ class HandsFreeViewModel: NSObject, ObservableObject {
             DispatchQueue.main.async {
                 self?.isFaceDetected = isDetected
             }
+        }
+        
+        // 音声認識サービスのコールバック設定
+        voiceRecognitionService.onTextCaptured = { [weak self] capturedText in
+            guard let self = self else { return }
+            self.latestVoiceText = capturedText
+            print("【HandsFreeViewModel】: 📝 最新の音声テキストを更新: 「\(capturedText)」")
         }
     }
     
@@ -113,6 +121,15 @@ class HandsFreeViewModel: NSObject, ObservableObject {
         if voiceRecognitionService.isRecognizing {
             voiceRecognitionService.stopRecognition()
         }
+    }
+    
+    // MARK: - Voice Text Management
+    
+    /// 最新の音声テキストをクリア
+    func clearLatestVoiceText() {
+        latestVoiceText = nil
+        voiceRecognitionService.clearLatestText()
+        print("【HandsFreeViewModel】: 🗑️ 最新の音声テキストをクリアしました")
     }
     
     // MARK: - Status Timer
