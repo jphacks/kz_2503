@@ -15,6 +15,7 @@ final class SearchViewModel: ObservableObject {
     @Published var searchHistory: [String] = []
     @Published var searchResults: [SearchRecipe] = []
     @Published var popularRecipes: [PopularRecipe] = []
+    @Published var userInfoCache: [String: UserInfo] = [:]
     @Published var isLoading: Bool = false
     @Published var isLoadingPopularRecipes: Bool = false
     @Published var errorMessage: String?
@@ -24,6 +25,7 @@ final class SearchViewModel: ObservableObject {
     private let searchHistoryRepository = SearchHistoryRepository()
     private let searchWordRepository = SearchWordRepository()
     private let popularRecipeRepository = PopularRecipeRepository()
+    private let userRepository = UserRepository()
     
     init() {
         loadSearchHistory()
@@ -105,6 +107,8 @@ final class SearchViewModel: ObservableObject {
             case .success(let recipes):
                 popularRecipes = recipes
                 print("✅ Loaded \(recipes.count) popular recipes")
+                // 各レシピのユーザー情報を取得
+                await loadUserInfoForRecipes(recipes)
             case .error(let message):
                 print("❌ Failed to load popular recipes: \(message)")
                 popularRecipesErrorMessage = message
@@ -112,5 +116,39 @@ final class SearchViewModel: ObservableObject {
                 popularRecipes = []
             }
         }
+    }
+    
+    private func loadUserInfoForRecipes(_ recipes: [PopularRecipe]) async {
+        for recipe in recipes {
+            // 既にキャッシュされている場合はスキップ
+            if userInfoCache[recipe.userId] != nil {
+                continue
+            }
+            
+            let result = await userRepository.getUserInfo(userId: recipe.userId)
+            switch result {
+            case .success(let userInfo):
+                userInfoCache[recipe.userId] = userInfo
+                print("✅ Loaded user info for: \(userInfo.username)")
+            case .error(let message):
+                print("❌ Failed to load user info for \(recipe.userId): \(message)")
+                // エラーが発生してもUIを壊さないように、デフォルトのユーザー情報を設定
+                let defaultUserInfo = UserInfo(
+                    userId: recipe.userId,
+                    username: "ユーザー",
+                    mailadress: "",
+                    profile: "",
+                    icon: "",
+                    isWink: false,
+                    location: "",
+                    isAi: false
+                )
+                userInfoCache[recipe.userId] = defaultUserInfo
+            }
+        }
+    }
+    
+    func getUserInfo(for userId: String) -> UserInfo? {
+        return userInfoCache[userId]
     }
 }

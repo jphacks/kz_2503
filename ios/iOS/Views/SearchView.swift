@@ -10,6 +10,25 @@ import SwiftUI
 struct SearchView: View {
     @StateObject private var viewModel = SearchViewModel()
     
+    // ImgurのURLを直接的な画像URLに変換する関数
+    private func convertImgurUrl(_ url: String) -> String? {
+        guard !url.isEmpty else { return nil }
+        
+        // ImgurのギャラリーURL（https://imgur.com/a/xxxxx）を直接的な画像URLに変換
+        if url.contains("imgur.com/a/") {
+            let galleryId = url.components(separatedBy: "/a/").last ?? ""
+            return "https://i.imgur.com/\(galleryId).jpg"
+        }
+        // 既に直接的なURLの場合はそのまま返す
+        else if url.contains("i.imgur.com") {
+            return url
+        }
+        // その他の場合はそのまま返す
+        else {
+            return url
+        }
+    }
+    
     var body: some View {
         VStack(spacing: 0) {
             // ヘッダー
@@ -154,12 +173,18 @@ struct SearchView: View {
                             } else {
                                 LazyVStack(spacing: 16) {
                                     ForEach(viewModel.popularRecipes, id: \.recipeId) { recipe in
+                                        let userInfo = viewModel.getUserInfo(for: recipe.userId)
+                                        let imageUrl = convertImgurUrl(recipe.pictureUrl)
                                         RecipeCardView(
                                             title: recipe.title,
                                             ingredients: recipe.recipeMaterial, // 実際の材料データを使用
-                                            chefName: "ユーザー", // chef情報がないためデフォルト値
-                                            imageUrl: recipe.pictureUrl.isEmpty ? nil : recipe.pictureUrl
+                                            chefName: userInfo?.username ?? "ユーザー", // ユーザー名を表示
+                                            imageUrl: imageUrl,
+                                            userIconUrl: userInfo?.icon.isEmpty == false ? userInfo?.icon : nil
                                         )
+                                        .onAppear {
+                                            print("🍽️ Recipe: \(recipe.title), Original URL: \(recipe.pictureUrl), Converted URL: \(imageUrl ?? "nil")")
+                                        }
                                     }
                                 }
                                 .padding(.horizontal, 20)

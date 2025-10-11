@@ -12,12 +12,14 @@ struct RecipeCardView: View {
     let ingredients: [String]
     let chefName: String
     let imageUrl: String?
+    let userIconUrl: String?
     
-    init(title: String, ingredients: [String], chefName: String, imageUrl: String? = nil) {
+    init(title: String, ingredients: [String], chefName: String, imageUrl: String? = nil, userIconUrl: String? = nil) {
         self.title = title
         self.ingredients = ingredients
         self.chefName = chefName
         self.imageUrl = imageUrl
+        self.userIconUrl = userIconUrl
     }
     
     var body: some View {
@@ -48,9 +50,23 @@ struct RecipeCardView: View {
                 
                 // ユーザー情報
                 HStack(spacing: 8) {
-                    Circle()
-                        .fill(Color.gray.opacity(0.3))
+                    // ユーザーアイコン
+                    if let userIconUrl = userIconUrl, !userIconUrl.isEmpty {
+                        AsyncImage(url: URL(string: userIconUrl)) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        } placeholder: {
+                            Circle()
+                                .fill(Color.gray.opacity(0.3))
+                        }
                         .frame(width: 20, height: 20)
+                        .clipShape(Circle())
+                    } else {
+                        Circle()
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(width: 20, height: 20)
+                    }
                     
                     Text(chefName)
                         .font(.caption)
@@ -66,13 +82,24 @@ struct RecipeCardView: View {
                     .frame(width: 80, height: 80)
                 
                 if let imageUrl = imageUrl, !imageUrl.isEmpty {
-                    AsyncImage(url: URL(string: imageUrl)) { image in
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    } placeholder: {
-                        Image(systemName: "photo")
-                            .foregroundColor(.gray.opacity(0.6))
+                    AsyncImage(url: URL(string: imageUrl)) { phase in
+                        switch phase {
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        case .failure(_):
+                            Image(systemName: "photo")
+                                .foregroundColor(.gray.opacity(0.6))
+                                .font(.system(size: 24))
+                        case .empty:
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle())
+                        @unknown default:
+                            Image(systemName: "photo")
+                                .foregroundColor(.gray.opacity(0.6))
+                                .font(.system(size: 24))
+                        }
                     }
                     .frame(width: 80, height: 80)
                     .clipShape(RoundedRectangle(cornerRadius: 8))
