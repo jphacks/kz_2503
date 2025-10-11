@@ -28,7 +28,7 @@ enum CheckAccountResult {
 
 // MARK: - Repository
 class CheckAccountRepository {
-    private let baseURL = "https://eb72f576de22.ngrok-free.app"
+    private let baseURL = "https://35db6a68b9f6.ngrok-free.app"
     
     func checkAccount(email: String) async -> CheckAccountResult {
         // メールアドレスのバリデーション

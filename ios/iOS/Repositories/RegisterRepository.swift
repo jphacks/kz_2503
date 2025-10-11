@@ -32,6 +32,16 @@ struct RegisterResponse: Codable {
         case userId = "user_id"
         case message
     }
+    
+    // デバッグ用の初期化子
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        status = try container.decode(Int.self, forKey: .status)
+        userId = try container.decodeIfPresent(String.self, forKey: .userId)
+        message = try container.decodeIfPresent(String.self, forKey: .message)
+        
+        print("Decoded Response - Status: \(status), UserId: \(userId ?? "nil"), Message: \(message ?? "nil")")
+    }
 }
 
 enum RegisterResult {
@@ -41,7 +51,7 @@ enum RegisterResult {
 
 // MARK: - Repository
 class RegisterRepository {
-    private let baseURL = "https://34cfff46e5dd.ngrok-free.app"
+    private let baseURL = "https://35db6a68b9f6.ngrok-free.app"
     
     func register(username: String, password: String, email: String, location: String = "Japan") async -> RegisterResult {
         // バリデーション
@@ -80,10 +90,21 @@ class RegisterRepository {
             let jsonData = try JSONEncoder().encode(requestBody)
             request.httpBody = jsonData
             
+            // デバッグ用: リクエスト内容をログ出力
+            if let requestString = String(data: jsonData, encoding: .utf8) {
+                print("API Request Body: \(requestString)")
+            }
+            
             let (data, response) = try await URLSession.shared.data(for: request)
             
             guard let httpResponse = response as? HTTPURLResponse else {
                 return .error(message: "サーバーからの応答が無効です")
+            }
+            
+            // デバッグ用: レスポンス内容をログ出力
+            if let responseString = String(data: data, encoding: .utf8) {
+                print("API Response Status: \(httpResponse.statusCode)")
+                print("API Response Body: \(responseString)")
             }
             
             let decoder = JSONDecoder()
@@ -105,9 +126,11 @@ class RegisterRepository {
             }
             
         } catch {
-            if error is DecodingError {
-                return .error(message: "サーバーからの応答の解析に失敗しました")
+            if let decodingError = error as? DecodingError {
+                print("Decoding Error: \(decodingError)")
+                return .error(message: "サーバーからの応答の解析に失敗しました: \(decodingError.localizedDescription)")
             } else {
+                print("Network Error: \(error)")
                 return .error(message: "ネットワークエラーが発生しました: \(error.localizedDescription)")
             }
         }
