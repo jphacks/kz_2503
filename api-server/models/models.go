@@ -1,6 +1,9 @@
 package models
 
-import "sync"
+import (
+	"sync"
+	"time"
+)
 
 // レシピ材料
 type RecipeMaterial struct {
@@ -28,14 +31,20 @@ type Recipe struct {
 	ServingCount   int              `json:"serving_count"`
 	RecipeMaterial []RecipeMaterial `json:"recipe_material"`
 	RecipeContent  []RecipeContent  `json:"recipe_content"`
+	CreatedAt      time.Time        `json:"created_at"`
+	UpdatedAt      time.Time        `json:"updated_at"`
 }
 
 // レシピ一覧用の簡易レシピ
 type RecipeSummary struct {
-	RecipeID   string `json:"recipe_id"`
-	Title      string `json:"title"`
-	Chef       string `json:"chef"`
-	PictureURL string `json:"picture_url"`
+	RecipeID     string `json:"recipe_id"`
+	UserID       string `json:"user_id"`
+	CategoryID   string `json:"category_id"`
+	Status       string `json:"status"`
+	Title        string `json:"title"`
+	Chef         string `json:"chef"`
+	PictureURL   string `json:"picture_url"`
+	ServingCount int    `json:"serving_count"`
 }
 
 // 週間レシピ
@@ -60,15 +69,17 @@ type WeeklyRecipesResponse struct {
 
 // ユーザー
 type User struct {
-	UserID       string `json:"user_id"`
-	Username     string `json:"username"`
-	PasswordHash string `json:"password_hash"`
-	MailAddress  string `json:"mailadress"`
-	Profile      string `json:"profile"`
-	Icon         string `json:"icon"`
-	IsWink       bool   `json:"is_wink"`
-	Location     string `json:"location"`
-	IsAI         bool   `json:"is_ai"`
+	UserID       string    `json:"user_id"`
+	Username     string    `json:"username"`
+	PasswordHash string    `json:"password_hash"`
+	MailAddress  string    `json:"mailadress"`
+	Profile      string    `json:"profile"`
+	Icon         string    `json:"icon"`
+	IsWink       bool      `json:"is_wink"`
+	Location     string    `json:"location"`
+	IsAI         bool      `json:"is_ai"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
 }
 
 // お気に入りレシピ
