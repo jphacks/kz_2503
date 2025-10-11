@@ -9,6 +9,11 @@ class CameraService: NSObject {
     private weak var delegate: AVCaptureVideoDataOutputSampleBufferDelegate?
     private let captureQueue = DispatchQueue(label: "camera.queue")
     private var videoOutput: AVCaptureVideoDataOutput?
+    
+    /// カメラセッションが実行中かどうか
+    var isSessionRunning: Bool {
+        return captureSession.isRunning
+    }
 
     override init() {
         self.previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
