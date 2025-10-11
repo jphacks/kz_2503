@@ -9,6 +9,7 @@ struct RecipeView: View {
     @State private var showHandsFreeSettings = false
     @State private var voiceGuidanceEnabled = true
     @State private var autoScrollEnabled = false
+    @State private var voiceInputEnabled = false
     @StateObject private var viewModel = HandsFreeViewModel()
     
     private let recipeDetailRepository = RecipeDetailRepository()
@@ -181,7 +182,7 @@ struct RecipeView: View {
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text("自動スクロール").font(.subheadline).fontWeight(.medium)
-                                Text("手順に合わせて自動でスクロールします").font(.caption).foregroundColor(.secondary)
+                                Text("ウィンクで自動スクロールします").font(.caption).foregroundColor(.secondary)
                             }
                             Spacer()
                             Toggle("", isOn: $autoScrollEnabled).labelsHidden()
@@ -189,14 +190,14 @@ struct RecipeView: View {
                         .padding(.horizontal, 12).padding(.vertical, 8)
                         .background(Color(.systemGray6)).cornerRadius(8)
                         
-                        // 音声ガイダンス設定
+                        // 音声入力設定
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
-                                Text("音声ガイダンス").font(.subheadline).fontWeight(.medium)
-                                Text("料理の手順を音声で案内します").font(.caption).foregroundColor(.secondary)
+                                Text("音声入力").font(.subheadline).fontWeight(.medium)
+                                Text("音声を文字起こしします").font(.caption).foregroundColor(.secondary)
                             }
                             Spacer()
-                            Toggle("", isOn: $voiceGuidanceEnabled).labelsHidden()
+                            Toggle("", isOn: $voiceInputEnabled).labelsHidden()
                         }
                         .padding(.horizontal, 12).padding(.vertical, 8)
                         .background(Color(.systemGray6)).cornerRadius(8)
@@ -204,20 +205,24 @@ struct RecipeView: View {
                     
                     // ハンズフリーモード開始ボタン
                     Button(action: {
-                        if autoScrollEnabled {
+                        if autoScrollEnabled || voiceInputEnabled {
+                            // ViewModelに設定を反映
+                            viewModel.autoScrollEnabled = autoScrollEnabled
+                            viewModel.voiceInputEnabled = voiceInputEnabled
                             viewModel.toggleHandsFreeMode()
                         }
                         showHandsFreeSettings = false
                     }) {
                         HStack {
                             Image(systemName: "play.fill")
-                            Text(autoScrollEnabled ? "ハンズフリーモードを開始" : "自動スクロールを有効にしてください")
+                            Text((autoScrollEnabled || voiceInputEnabled) ? "ハンズフリーモードを開始" : "自動スクロールまたは音声入力を有効にしてください")
+                                .multilineTextAlignment(.center)
                         }
                         .font(.headline).foregroundColor(.white).frame(maxWidth: .infinity)
-                        .padding().background(autoScrollEnabled ? Color.blue : Color.gray)
+                        .padding().background((autoScrollEnabled || voiceInputEnabled) ? Color.blue : Color.gray)
                         .cornerRadius(12)
                     }
-                    .disabled(!autoScrollEnabled)
+                    .disabled(!autoScrollEnabled && !voiceInputEnabled)
                 }
                 .padding()
                 .background(Color(.systemBackground))
