@@ -18,3 +18,4 @@ class UserIdData {
         self.createdAt = Date()
     }
 }
+

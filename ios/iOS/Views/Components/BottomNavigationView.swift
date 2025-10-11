@@ -71,3 +71,4 @@ struct BottomNavigationView: View {
 #Preview {
     BottomNavigationView()
 }
+
