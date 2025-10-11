@@ -1,10 +1,3 @@
-//
-//  APIConfig.swift
-//  iOS
-//
-//  Created by 三ツ井渚 on 2025/10/11.
-//
-
 import Foundation
 
 enum Environment {
@@ -14,7 +7,7 @@ enum Environment {
     var baseURL: String {
         switch self {
         case .development:
-            return "https://5a6abf98d0e8.ngrok-free.app"
+            return "https://296bd24e2dff.ngrok-free.app"
         case .production:
             return "https://api.wincook.com" // 本番環境のURL
         }

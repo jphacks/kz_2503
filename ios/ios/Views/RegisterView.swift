@@ -1,10 +1,3 @@
-//
-//  RegisterView.swift
-//  iOS
-//
-//  Created by 三ツ井渚 on 2025/10/11.
-//
-
 import SwiftUI
 
 struct RegisterView: View {
@@ -18,20 +11,20 @@ struct RegisterView: View {
     
     var body: some View {
         VStack(spacing: 30) {
-            Spacer(minLength: 100)
+            Spacer(minLength: 200)
             
-            // アプリ名
-            Text("WinCook")
-                .font(.largeTitle)
-                .fontWeight(.medium)
-                .foregroundColor(.black)
-            
-            // タイトル
-            Text("新規登録")
-                .font(.title2)
-                .foregroundColor(.black)
-            
-            Spacer()
+            VStack(spacing: 4) {
+                // アプリ名
+                Text("WinCook")
+                    .font(.largeTitle)
+                    .fontWeight(.medium)
+                    .foregroundColor(.black)
+                
+                // タイトル
+                Text("新規登録")
+                    .font(.title2)
+                    .foregroundColor(.black)
+            }
             
             VStack(alignment: .leading, spacing: 16) {
                 // パスワード入力
@@ -58,10 +51,6 @@ struct RegisterView: View {
                 
                 // 確認用パスワード入力
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("確認用パスワードを入力")
-                        .font(.body)
-                        .foregroundColor(.black)
-                        .frame(maxWidth: .infinity, alignment: .leading)
                     
                     SecureField("確認用", text: $viewModel.confirmPassword)
                         .textFieldStyle(.plain)
@@ -79,6 +68,7 @@ struct RegisterView: View {
                 }
             }
             .padding(.horizontal, 50)
+            .padding(.vertical, 20)
             
             Spacer()
             
@@ -107,7 +97,7 @@ struct RegisterView: View {
             .padding(.horizontal, 20)
             .padding(.bottom, 50)
             
-            Spacer(minLength: 100)
+            Spacer(minLength: 200)
         }
         .background(Color.white)
         .navigationTitle("新規登録")

@@ -15,16 +15,18 @@ struct StartView: View {
         VStack(spacing: 30) {
             Spacer(minLength: 200)
             
-            // アプリ名
-            Text("WinCook")
-                .font(.largeTitle)
-                .fontWeight(.medium)
-                .foregroundColor(.black)
-            
-            // 説明文
-            Text("新規登録またはログイン")
-                .font(.title3)
-                .foregroundColor(.black)
+            VStack(spacing: 4) {
+                // アプリ名
+                Text("WinCook")
+                    .font(.largeTitle)
+                    .fontWeight(.medium)
+                    .foregroundColor(.black)
+                
+                // 説明文
+                Text("新規登録またはログイン")
+                    .font(.title3)
+                    .foregroundColor(.black)
+            }
             
             VStack(alignment: .leading, spacing: 8) {
                 // 入力欄のラベル
@@ -58,8 +60,9 @@ struct StartView: View {
                     .frame(maxWidth: 310, alignment: .leading)
             }
             .padding(.horizontal, 50)
+            .padding(.vertical, 20)
             
-            Spacer()
+            Spacer(minLength: 15)
             
             // 次へボタン
             Button(action: {

@@ -9,7 +9,9 @@ struct RecipeView: View {
     @State private var showHandsFreeSettings = false
     @State private var voiceGuidanceEnabled = true
     @State private var autoScrollEnabled = false
+    @State private var voiceInputEnabled = false
     @StateObject private var viewModel = HandsFreeViewModel()
+    @State private var aiViewModel = AIChatViewModel()
     
     private let recipeDetailRepository = RecipeDetailRepository()
     
@@ -48,6 +50,10 @@ struct RecipeView: View {
                 }
                 .onAppear {
                     loadRecipeData()
+                    aiViewModel.onAppear()
+                }
+                .onChange(of: viewModel.latestVoiceText) { oldValue, newValue in
+                    handleVoiceTextChange(oldValue: oldValue, newValue: newValue)
                 }
         }
     }
@@ -105,6 +111,11 @@ struct RecipeView: View {
                 
                 if showHandsFreeSettings {
                     handsFreeSettingsOverlay
+                }
+                
+                // AI応答表示（音声入力が有効で、メッセージがある場合）
+                if viewModel.isHandsFreeModeOn && viewModel.voiceInputEnabled && aiViewModel.messages.count > 1 {
+                    aiResponseOverlay
                 }
                 
                 handsFreeControlsView
@@ -181,7 +192,7 @@ struct RecipeView: View {
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text("自動スクロール").font(.subheadline).fontWeight(.medium)
-                                Text("手順に合わせて自動でスクロールします").font(.caption).foregroundColor(.secondary)
+                                Text("ウィンクで自動スクロールします").font(.caption).foregroundColor(.secondary)
                             }
                             Spacer()
                             Toggle("", isOn: $autoScrollEnabled).labelsHidden()
@@ -189,14 +200,14 @@ struct RecipeView: View {
                         .padding(.horizontal, 12).padding(.vertical, 8)
                         .background(Color(.systemGray6)).cornerRadius(8)
                         
-                        // 音声ガイダンス設定
+                        // 音声入力設定
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
-                                Text("音声ガイダンス").font(.subheadline).fontWeight(.medium)
-                                Text("料理の手順を音声で案内します").font(.caption).foregroundColor(.secondary)
+                                Text("音声入力").font(.subheadline).fontWeight(.medium)
+                                Text("音声を文字起こしします").font(.caption).foregroundColor(.secondary)
                             }
                             Spacer()
-                            Toggle("", isOn: $voiceGuidanceEnabled).labelsHidden()
+                            Toggle("", isOn: $voiceInputEnabled).labelsHidden()
                         }
                         .padding(.horizontal, 12).padding(.vertical, 8)
                         .background(Color(.systemGray6)).cornerRadius(8)
@@ -204,20 +215,24 @@ struct RecipeView: View {
                     
                     // ハンズフリーモード開始ボタン
                     Button(action: {
-                        if autoScrollEnabled {
+                        if autoScrollEnabled || voiceInputEnabled {
+                            // ViewModelに設定を反映
+                            viewModel.autoScrollEnabled = autoScrollEnabled
+                            viewModel.voiceInputEnabled = voiceInputEnabled
                             viewModel.toggleHandsFreeMode()
                         }
                         showHandsFreeSettings = false
                     }) {
                         HStack {
                             Image(systemName: "play.fill")
-                            Text(autoScrollEnabled ? "ハンズフリーモードを開始" : "自動スクロールを有効にしてください")
+                            Text((autoScrollEnabled || voiceInputEnabled) ? "ハンズフリーモードを開始" : "自動スクロールまたは音声入力を有効にしてください")
+                                .multilineTextAlignment(.center)
                         }
                         .font(.headline).foregroundColor(.white).frame(maxWidth: .infinity)
-                        .padding().background(autoScrollEnabled ? Color.blue : Color.gray)
+                        .padding().background((autoScrollEnabled || voiceInputEnabled) ? Color.blue : Color.gray)
                         .cornerRadius(12)
                     }
-                    .disabled(!autoScrollEnabled)
+                    .disabled(!autoScrollEnabled && !voiceInputEnabled)
                 }
                 .padding()
                 .background(Color(.systemBackground))
@@ -226,6 +241,62 @@ struct RecipeView: View {
                 .padding(.horizontal)
                 .padding(.bottom)
             }
+        }
+    }
+
+    @ViewBuilder
+    private var aiResponseOverlay: some View {
+        VStack {
+            Spacer()
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Image(systemName: "brain")
+                        .font(.headline)
+                        .foregroundColor(.purple)
+                    Text("AI料理アシスタント")
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                    Spacer()
+                    Button(action: {
+                        // AI応答をクリア（初期メッセージだけを残す）
+                        aiViewModel.messages = [aiViewModel.messages[0]]
+                    }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.gray)
+                    }
+                }
+                .padding(.bottom, 4)
+                
+                // 最新のメッセージのみ表示（最後の2件：ユーザーとアシスタント）
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 12) {
+                        ForEach(aiViewModel.messages.suffix(4)) { message in
+                            AIMessageBubble(message: message, onSpeak: {
+                                print("【RecipeView】🔊 読み上げボタンがタップされました")
+                                aiViewModel.speak(message.text)
+                            })
+                        }
+                        
+                        if aiViewModel.isSending {
+                            HStack {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle())
+                                Text("考え中...")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding(8)
+                        }
+                    }
+                }
+                .frame(maxHeight: 250)
+            }
+            .padding()
+            .background(Color(.systemBackground))
+            .cornerRadius(16)
+            .shadow(radius: 10)
+            .padding(.horizontal)
+            .padding(.bottom, 80)
         }
     }
 
@@ -244,6 +315,42 @@ struct RecipeView: View {
                         .padding()
                 }
                 Spacer()
+                
+                // 最新の音声テキストの表示
+                if viewModel.isHandsFreeModeOn && viewModel.voiceInputEnabled, let latestText = viewModel.latestVoiceText {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Image(systemName: "mic.fill")
+                                .font(.caption)
+                                .foregroundColor(.white)
+                            Text("音声入力")
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.white)
+                            Spacer()
+                            Button(action: {
+                                viewModel.clearLatestVoiceText()
+                            }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.white.opacity(0.8))
+                                    .font(.caption)
+                            }
+                        }
+                        
+                        Text(latestText)
+                            .font(.subheadline)
+                            .foregroundColor(.white)
+                            .padding(8)
+                            .background(Color.white.opacity(0.2))
+                            .cornerRadius(8)
+                    }
+                    .padding(12)
+                    .frame(maxWidth: 250)
+                    .background(Color.blue.opacity(0.95))
+                    .cornerRadius(12)
+                    .shadow(radius: 5)
+                    .padding()
+                }
             }
             Spacer()
             HandsFreeControlView(
@@ -512,6 +619,34 @@ struct RecipeView: View {
         .cornerRadius(12)
     }
     
+    // MARK: - Voice Input Handler
+    private func handleVoiceTextChange(oldValue: String?, newValue: String?) {
+        guard let newText = newValue, !newText.isEmpty else { return }
+        guard oldValue != newValue else { return }
+        
+        print("【RecipeView】🎤 音声テキストを受信: 「\(newText)」")
+        
+        // レシピコンテキストを作成
+        let context = SystemPrompt.CookingContext(
+            recipeTitle: recipe?.title,
+            currentStep: getCurrentStepDescription(),
+            servings: recipe?.servingCount
+        )
+        
+        // AIにプロンプトを送信
+        Task {
+            await aiViewModel.sendVoicePrompt(newText, context: context)
+        }
+    }
+    
+    private func getCurrentStepDescription() -> String? {
+        guard let recipe = recipe else { return nil }
+        guard currentStepIndex > 0, let contents = recipe.recipeContent else { return nil }
+        let index = currentStepIndex - 1
+        guard index < contents.count else { return nil }
+        return "STEP \(contents[index].step): \(contents[index].description)"
+    }
+    
     private func loadRecipeData() {
         // recipe_idが指定されている場合は、APIからデータを取得
         if let recipeId = recipeId {
@@ -537,6 +672,57 @@ struct RecipeView: View {
             print("🔍 No recipe ID specified")
             errorMessage = "レシピIDが指定されていません"
             isLoading = false
+        }
+    }
+}
+
+/// AI応答メッセージのバブル（RecipeView専用の簡易版）
+struct AIMessageBubble: View {
+    let message: AIMessage
+    let onSpeak: () -> Void
+    
+    var body: some View {
+        HStack(alignment: .top, spacing: 8) {
+            if message.role == .assistant {
+                Image(systemName: "brain.head.profile")
+                    .foregroundColor(.purple)
+                    .font(.caption)
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(message.text)
+                        .font(.body)
+                        .foregroundColor(.primary)
+                    
+                    Button(action: onSpeak) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "speaker.wave.2.fill")
+                            Text("読み上げ")
+                        }
+                        .font(.caption)
+                        .foregroundColor(.purple)
+                    }
+                    .buttonStyle(.bordered)
+                }
+                .padding(10)
+                .background(Color.purple.opacity(0.1))
+                .cornerRadius(10)
+                Spacer()
+            } else {
+                Spacer()
+                
+                VStack(alignment: .trailing) {
+                    Text(message.text)
+                        .font(.body)
+                        .foregroundColor(.white)
+                }
+                .padding(10)
+                .background(Color.blue)
+                .cornerRadius(10)
+                
+                Image(systemName: "person.fill")
+                    .foregroundColor(.blue)
+                    .font(.caption)
+            }
         }
     }
 }
