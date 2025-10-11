@@ -1,5 +1,5 @@
 //
-//  StartViewModel.swift
+//  LoginViewModel.swift
 //  iOS
 //
 //  Created by 三ツ井渚 on 2025/10/11.
@@ -11,40 +11,56 @@ import Combine
 
 @MainActor
 class LoginViewModel: ObservableObject {
-    @Published var email: String = ""
+    @Published var password: String = ""
     @Published var isLoading: Bool = false
     @Published var resultMessage: String = ""
     @Published var showResult: Bool = false
     @Published var resultType: ResultType = .none
+    @Published var loginSuccess: Bool = false
+    @Published var navigationDestination: NavigationDestination? = nil
     
-    private let checkAccountRepository = CheckAccountRepository()
+    private let loginRepository = LoginRepository()
+    let userId: String
+    
+    init(userId: String) {
+        self.userId = userId
+    }
     
     enum ResultType {
         case none
         case success
-        case accountNotFound
         case error
     }
     
-    func checkAccount() async {
-        guard !email.isEmpty else {
-            showResult(message: "メールアドレスを入力してください", type: .error)
+    enum NavigationDestination: Hashable {
+        case search
+    }
+    
+    func login() async {
+        // バリデーション
+        guard !password.isEmpty else {
+            showResult(message: "パスワードを入力してください", type: .error)
+            return
+        }
+        
+        guard password.count >= 6 else {
+            showResult(message: "パスワードは6文字以上で入力してください", type: .error)
             return
         }
         
         isLoading = true
         showResult = false
         
-        let result = await checkAccountRepository.checkAccount(email: email)
+        let result = await loginRepository.login(userId: userId, password: password)
         
         isLoading = false
         
         switch result {
-        case .success(let userId):
-            showResult(message: "アカウントが見つかりました。ユーザーID: \(userId)", type: .success)
-            
-        case .accountNotFound(let message):
-            showResult(message: message, type: .accountNotFound)
+        case .success(let message):
+            showResult(message: message, type: .success)
+            loginSuccess = true
+            // SearchViewに遷移
+            navigationDestination = .search
             
         case .error(let message):
             showResult(message: message, type: .error)
@@ -61,5 +77,9 @@ class LoginViewModel: ObservableObject {
         showResult = false
         resultMessage = ""
         resultType = .none
+    }
+    
+    func resetNavigation() {
+        navigationDestination = nil
     }
 }
