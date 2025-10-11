@@ -33,7 +33,7 @@ final class RemoteSearchRecipeRepository: SearchRecipeRepository {
         guard !q.isEmpty else { return [] }
 
         let encoded = q.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
-        var url = APIConfig.baseURL
+        var url = URL(string: APIConfig.shared.baseURL)!
         url.append(path: "/search/word")
         url.append(path: "/\(encoded)")
 
