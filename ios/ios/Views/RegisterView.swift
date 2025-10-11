@@ -1,5 +1,5 @@
 //
-//  LoginView.swift
+//  RegisterView.swift
 //  iOS
 //
 //  Created by 三ツ井渚 on 2025/10/11.
@@ -7,17 +7,17 @@
 
 import SwiftUI
 
-struct LoginView: View {
-    let userId: String
-    @StateObject private var viewModel: LoginViewModel
+struct RegisterView: View {
+    let email: String
+    @StateObject private var viewModel: RegisterViewModel
     
-    init(userId: String) {
-        self.userId = userId
-        self._viewModel = StateObject(wrappedValue: LoginViewModel(userId: userId))
+    init(email: String) {
+        self.email = email
+        self._viewModel = StateObject(wrappedValue: RegisterViewModel(email: email))
     }
     
     var body: some View {
-        VStack(spacing: 40) {
+        VStack(spacing: 30) {
             Spacer(minLength: 100)
             
             // アプリ名
@@ -27,7 +27,7 @@ struct LoginView: View {
                 .foregroundColor(.black)
             
             // タイトル
-            Text("ログイン")
+            Text("新規登録")
                 .font(.title2)
                 .foregroundColor(.black)
             
@@ -55,15 +55,37 @@ struct LoginView: View {
                                 )
                         )
                 }
+                
+                // 確認用パスワード入力
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("確認用パスワードを入力")
+                        .font(.body)
+                        .foregroundColor(.black)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    
+                    SecureField("確認用", text: $viewModel.confirmPassword)
+                        .textFieldStyle(.plain)
+                        .padding(.horizontal, 12)
+                        .frame(height: 52)
+                        .frame(maxWidth: 310)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.gray.opacity(0.4), lineWidth: 1)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .fill(Color.white)
+                                )
+                        )
+                }
             }
             .padding(.horizontal, 50)
             
             Spacer()
             
-            // ログインボタン
+            // 新規登録ボタン
             Button(action: {
                 Task {
-                    await viewModel.login()
+                    await viewModel.register()
                 }
             }) {
                 HStack {
@@ -72,7 +94,7 @@ struct LoginView: View {
                             .progressViewStyle(CircularProgressViewStyle(tint: .white))
                             .scaleEffect(0.8)
                     }
-                    Text(viewModel.isLoading ? "ログイン中..." : "ログイン")
+                    Text(viewModel.isLoading ? "登録中..." : "新規登録")
                         .font(.headline)
                         .foregroundColor(.white)
                 }
@@ -88,12 +110,12 @@ struct LoginView: View {
             Spacer(minLength: 100)
         }
         .background(Color.white)
-        .navigationTitle("ログイン")
+        .navigationTitle("新規登録")
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(item: $viewModel.navigationDestination) { destination in
             switch destination {
-            case .search:
-                SearchView()
+            case .profileSetting:
+                ProfileSettingView()
             }
         }
         .overlay(
@@ -161,6 +183,6 @@ struct LoginView: View {
 
 #Preview {
     NavigationStack {
-        LoginView(userId: "123")
+        RegisterView(email: "user@example.com")
     }
 }

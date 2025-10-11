@@ -34,6 +34,46 @@ POST
 
 
 
+/user/{email}
+GET
+
+# Body
+
+```json
+
+```
+
+# Response
+
+## 200
+
+```json
+{
+	"status" : 200,
+	"user_id" : "123",
+}
+```
+
+## 202
+
+```json
+{
+	"status" : 202,
+	"message" : "アカウントが存在しません",
+}
+```
+
+## 400
+
+```json
+{
+	"status" : 400,
+	"message" : "エラーが発生しました"
+}
+```
+
+
+
 /user/{user_id}
 GET
 
@@ -213,6 +253,7 @@ PATCH
 {
 	"user_id" : "123",
 	"Icon" : "https://imgur.com/a/dsfJeyk",
+	"username" : "kota"
 }
 ```
 

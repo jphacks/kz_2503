@@ -1,5 +1,5 @@
 //
-//  LoginView.swift
+//  ProfileSettingView.swift
 //  iOS
 //
 //  Created by 三ツ井渚 on 2025/10/11.
@@ -7,63 +7,88 @@
 
 import SwiftUI
 
-struct LoginView: View {
-    let userId: String
-    @StateObject private var viewModel: LoginViewModel
+struct ProfileSettingView: View {
+    @StateObject private var viewModel: ProfileSettingViewModel
     
-    init(userId: String) {
-        self.userId = userId
-        self._viewModel = StateObject(wrappedValue: LoginViewModel(userId: userId))
+    init() {
+        self._viewModel = StateObject(wrappedValue: ProfileSettingViewModel())
     }
     
     var body: some View {
         VStack(spacing: 40) {
             Spacer(minLength: 100)
             
-            // アプリ名
-            Text("WinCook")
-                .font(.largeTitle)
+            // タイトル
+            Text("プロフィールを作成")
+                .font(.title)
                 .fontWeight(.medium)
                 .foregroundColor(.black)
             
-            // タイトル
-            Text("ログイン")
-                .font(.title2)
-                .foregroundColor(.black)
-            
             Spacer()
             
-            VStack(alignment: .leading, spacing: 16) {
-                // パスワード入力
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("パスワードを入力")
-                        .font(.body)
-                        .foregroundColor(.black)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+            VStack(spacing: 30) {
+                // プロフィール画像
+                VStack(spacing: 16) {
+                    ZStack {
+                        Circle()
+                            .fill(Color.gray.opacity(0.2))
+                            .frame(width: 120, height: 120)
+                        
+                        Image(systemName: "person.circle.fill")
+                            .font(.system(size: 60))
+                            .foregroundColor(.gray.opacity(0.6))
+                        
+                        // カメラアイコン
+                        VStack {
+                            Spacer()
+                            HStack {
+                                Spacer()
+                                ZStack {
+                                    Circle()
+                                        .fill(Color.gray)
+                                        .frame(width: 32, height: 32)
+                                    
+                                    Image(systemName: "camera.fill")
+                                        .font(.system(size: 16))
+                                        .foregroundColor(.white)
+                                }
+                                .offset(x: 8, y: 8)
+                            }
+                        }
+                        .frame(width: 120, height: 120)
+                    }
+                    .onTapGesture {
+                        // TODO: 画像選択機能を実装
+                    }
+                }
+                
+                // ニックネーム入力
+                VStack(spacing: 8) {
+                    HStack {
+                        TextField("ニックネーム", text: $viewModel.nickname)
+                            .font(.body)
+                            .foregroundColor(.black)
+                            .textFieldStyle(.plain)
+                        
+                        Image(systemName: "pencil")
+                            .font(.system(size: 16))
+                            .foregroundColor(.gray)
+                    }
+                    .padding(.horizontal, 20)
                     
-                    SecureField("パスワード", text: $viewModel.password)
-                        .textFieldStyle(.plain)
-                        .padding(.horizontal, 12)
-                        .frame(height: 52)
-                        .frame(maxWidth: 310)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.gray.opacity(0.4), lineWidth: 1)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .fill(Color.white)
-                                )
-                        )
+                    Rectangle()
+                        .fill(Color.gray.opacity(0.3))
+                        .frame(height: 1)
+                        .padding(.horizontal, 20)
                 }
             }
-            .padding(.horizontal, 50)
             
             Spacer()
             
-            // ログインボタン
+            // はじめるボタン
             Button(action: {
                 Task {
-                    await viewModel.login()
+                    await viewModel.updateProfile()
                 }
             }) {
                 HStack {
@@ -72,7 +97,7 @@ struct LoginView: View {
                             .progressViewStyle(CircularProgressViewStyle(tint: .white))
                             .scaleEffect(0.8)
                     }
-                    Text(viewModel.isLoading ? "ログイン中..." : "ログイン")
+                    Text(viewModel.isLoading ? "更新中..." : "はじめる")
                         .font(.headline)
                         .foregroundColor(.white)
                 }
@@ -88,7 +113,7 @@ struct LoginView: View {
             Spacer(minLength: 100)
         }
         .background(Color.white)
-        .navigationTitle("ログイン")
+        .navigationTitle("プロフィール設定")
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(item: $viewModel.navigationDestination) { destination in
             switch destination {
@@ -161,6 +186,6 @@ struct LoginView: View {
 
 #Preview {
     NavigationStack {
-        LoginView(userId: "123")
+        ProfileSettingView()
     }
 }

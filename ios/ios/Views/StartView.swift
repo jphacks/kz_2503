@@ -1,5 +1,5 @@
 //
-//  LoginView.swift
+//  StartView.swift
 //  iOS
 //
 //  Created by 三ツ井渚 on 2025/10/11.
@@ -7,18 +7,13 @@
 
 import SwiftUI
 
-struct LoginView: View {
-    let userId: String
-    @StateObject private var viewModel: LoginViewModel
-    
-    init(userId: String) {
-        self.userId = userId
-        self._viewModel = StateObject(wrappedValue: LoginViewModel(userId: userId))
-    }
+struct StartView: View {
+    @StateObject private var viewModel = StartViewModel()
     
     var body: some View {
-        VStack(spacing: 40) {
-            Spacer(minLength: 100)
+        NavigationStack {
+        VStack(spacing: 30) {
+            Spacer(minLength: 200)
             
             // アプリ名
             Text("WinCook")
@@ -26,44 +21,50 @@ struct LoginView: View {
                 .fontWeight(.medium)
                 .foregroundColor(.black)
             
-            // タイトル
-            Text("ログイン")
-                .font(.title2)
+            // 説明文
+            Text("新規登録またはログイン")
+                .font(.title3)
                 .foregroundColor(.black)
             
-            Spacer()
-            
-            VStack(alignment: .leading, spacing: 16) {
-                // パスワード入力
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("パスワードを入力")
-                        .font(.body)
-                        .foregroundColor(.black)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    
-                    SecureField("パスワード", text: $viewModel.password)
-                        .textFieldStyle(.plain)
-                        .padding(.horizontal, 12)
-                        .frame(height: 52)
-                        .frame(maxWidth: 310)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.gray.opacity(0.4), lineWidth: 1)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .fill(Color.white)
-                                )
-                        )
-                }
+            VStack(alignment: .leading, spacing: 8) {
+                // 入力欄のラベル
+                Text("メールアドレスを入力")
+                    .font(.body)
+                    .foregroundColor(.black)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                
+                // メールアドレス入力フィールド
+                TextField("メールアドレス", text: $viewModel.email)
+                    .textFieldStyle(.plain) // 既存のRoundedBorderを外す
+                    .padding(.horizontal, 12)
+                    .frame(height: 52)
+                    .frame(maxWidth: 310)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(Color.gray.opacity(0.4), lineWidth: 1)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color.white)
+                            )
+                    )
+                    .keyboardType(.emailAddress)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled(true)
+                
+                // 補足テキスト
+                Text("すでにアカウントをお持ちか確認し、お持ちでない場合は新規登録します。")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+                    .frame(maxWidth: 310, alignment: .leading)
             }
             .padding(.horizontal, 50)
             
             Spacer()
             
-            // ログインボタン
+            // 次へボタン
             Button(action: {
                 Task {
-                    await viewModel.login()
+                    await viewModel.checkAccount()
                 }
             }) {
                 HStack {
@@ -72,7 +73,7 @@ struct LoginView: View {
                             .progressViewStyle(CircularProgressViewStyle(tint: .white))
                             .scaleEffect(0.8)
                     }
-                    Text(viewModel.isLoading ? "ログイン中..." : "ログイン")
+                    Text(viewModel.isLoading ? "確認中..." : "次へ")
                         .font(.headline)
                         .foregroundColor(.white)
                 }
@@ -85,17 +86,10 @@ struct LoginView: View {
             .padding(.horizontal, 20)
             .padding(.bottom, 50)
             
-            Spacer(minLength: 100)
+            
+            Spacer(minLength: 200)
         }
         .background(Color.white)
-        .navigationTitle("ログイン")
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationDestination(item: $viewModel.navigationDestination) { destination in
-            switch destination {
-            case .search:
-                SearchView()
-            }
-        }
         .overlay(
             // 結果表示
             VStack {
@@ -133,6 +127,15 @@ struct LoginView: View {
             }
             .animation(.easeInOut(duration: 0.3), value: viewModel.showResult)
         )
+        .navigationDestination(item: $viewModel.navigationDestination) { destination in
+            switch destination {
+            case .login(let userId):
+                LoginView(userId: userId)
+            case .register(let email):
+                RegisterView(email: email)
+            }
+        }
+        }
     }
     
     // MARK: - Computed Properties
@@ -140,6 +143,8 @@ struct LoginView: View {
         switch viewModel.resultType {
         case .success:
             return "checkmark.circle.fill"
+        case .accountNotFound:
+            return "person.crop.circle.badge.exclamationmark"
         case .error:
             return "exclamationmark.triangle.fill"
         case .none:
@@ -151,6 +156,8 @@ struct LoginView: View {
         switch viewModel.resultType {
         case .success:
             return .green
+        case .accountNotFound:
+            return .orange
         case .error:
             return .red
         case .none:
@@ -160,7 +167,5 @@ struct LoginView: View {
 }
 
 #Preview {
-    NavigationStack {
-        LoginView(userId: "123")
-    }
+    StartView()
 }
