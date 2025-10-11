@@ -1,10 +1,3 @@
-//
-//  Recipe.swift
-//  iOS
-//
-//  Created by AI Assistant on 2025/01/03.
-//
-
 import Foundation
 
 struct Recipe: Codable {
