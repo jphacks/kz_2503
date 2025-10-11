@@ -81,7 +81,20 @@ func (r *SupabaseRepository) makeRequest(method, endpoint string, body interface
 // ユーザー関連
 func (r *SupabaseRepository) CreateUser(user models.User) (*models.User, error) {
 	endpoint := fmt.Sprintf("%s/rest/v1/users", r.baseURL)
-	results, err := r.makeRequest("POST", endpoint, user)
+
+	// Supabaseに送信するデータ構造を作成
+	userData := map[string]interface{}{
+		"username":      user.Username,
+		"password_hash": user.PasswordHash,
+		"mail_address":  user.MailAddress,
+		"profile":       user.Profile,
+		"icon":          user.Icon,
+		"is_wink":       user.IsWink,
+		"location":      user.Location,
+		"is_ai":         user.IsAI,
+	}
+
+	results, err := r.makeRequest("POST", endpoint, userData)
 	if err != nil {
 		return nil, err
 	}
