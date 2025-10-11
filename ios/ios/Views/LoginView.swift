@@ -18,20 +18,20 @@ struct LoginView: View {
     
     var body: some View {
         VStack(spacing: 40) {
-            Spacer(minLength: 100)
+            Spacer(minLength: 200)
             
-            // アプリ名
-            Text("WinCook")
-                .font(.largeTitle)
-                .fontWeight(.medium)
-                .foregroundColor(.black)
-            
-            // タイトル
-            Text("ログイン")
-                .font(.title2)
-                .foregroundColor(.black)
-            
-            Spacer()
+            VStack(spacing: 4) {
+                // アプリ名
+                Text("WinCook")
+                    .font(.largeTitle)
+                    .fontWeight(.medium)
+                    .foregroundColor(.black)
+                
+                // タイトル
+                Text("ログイン")
+                    .font(.title2)
+                    .foregroundColor(.black)
+            }
             
             VStack(alignment: .leading, spacing: 16) {
                 // パスワード入力
@@ -57,6 +57,7 @@ struct LoginView: View {
                 }
             }
             .padding(.horizontal, 50)
+            .padding(.vertical, 20)
             
             Spacer()
             
@@ -85,7 +86,7 @@ struct LoginView: View {
             .padding(.horizontal, 20)
             .padding(.bottom, 50)
             
-            Spacer(minLength: 100)
+            Spacer(minLength: 200)
         }
         .background(Color.white)
         .navigationTitle("ログイン")
