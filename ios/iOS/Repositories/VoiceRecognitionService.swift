@@ -104,10 +104,10 @@ class VoiceRecognitionService {
         // タイムアウトチェックを開始
         startTimeoutCheck()
         
-        // オーディオセッションの設定
+        // オーディオセッションの設定（TTSと同時に使用できるように .playAndRecord を使用）
         let audioSession = AVAudioSession.sharedInstance()
-        try audioSession.setCategory(.record, mode: .measurement, options: .duckOthers)
-        try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+        try audioSession.setCategory(.playAndRecord, mode: .measurement, options: [.defaultToSpeaker, .allowBluetooth])
+        try audioSession.setActive(true, options: [])
         
         // 認識リクエストの作成
         recognitionRequest = SFSpeechAudioBufferRecognitionRequest()

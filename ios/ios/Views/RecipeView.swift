@@ -272,6 +272,7 @@ struct RecipeView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         ForEach(aiViewModel.messages.suffix(4)) { message in
                             AIMessageBubble(message: message, onSpeak: {
+                                print("【RecipeView】🔊 読み上げボタンがタップされました")
                                 aiViewModel.speak(message.text)
                             })
                         }
