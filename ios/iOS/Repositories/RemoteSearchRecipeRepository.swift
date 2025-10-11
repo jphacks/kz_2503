@@ -28,7 +28,6 @@ final class RemoteSearchRecipeRepository: SearchRecipeRepository {
 
     func all() async throws -> [RecipeSearchResult] { [] }
 
-    /// GET http://localhost:8080/search/word/{word}
     func search(keyword: String) async throws -> [RecipeSearchResult] {
         let q = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !q.isEmpty else { return [] }

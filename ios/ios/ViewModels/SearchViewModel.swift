@@ -27,7 +27,6 @@ final class SearchViewModel: ObservableObject {
         errorMessage = nil
     }
 
-    /// GET http://localhost:8080/search/word/{word}
     private func searchTitles(_ keyword: String) async {
         errorMessage = nil
         do {
