@@ -20,6 +20,7 @@ class LoginViewModel: ObservableObject {
     @Published var navigationDestination: NavigationDestination? = nil
     
     private let loginRepository = LoginRepository()
+    private let userIdRepository = UserIdRepository()
     let userId: String
     
     init(userId: String) {
@@ -57,6 +58,8 @@ class LoginViewModel: ObservableObject {
         
         switch result {
         case .success(let message):
+            // ログイン成功時にuser_idをローカルに保存
+            userIdRepository.saveUserId(userId)
             showResult(message: message, type: .success)
             loginSuccess = true
             // SearchViewに遷移
