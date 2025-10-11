@@ -28,7 +28,7 @@ enum CheckAccountResult {
 
 // MARK: - Repository
 class CheckAccountRepository {
-    private let baseURL = "https://5a6abf98d0e8.ngrok-free.app"
+    private let apiConfig = APIConfig.shared
     
     func checkAccount(email: String) async -> CheckAccountResult {
         // メールアドレスのバリデーション
@@ -41,7 +41,7 @@ class CheckAccountRepository {
             return .error(message: "メールアドレスの形式が正しくありません")
         }
         
-        let urlString = "\(baseURL)/user/email/\(encodedEmail)"
+        let urlString = "\(apiConfig.baseURL)\(APIConfig.Endpoints.checkAccount)/\(encodedEmail)"
         
         guard let url = URL(string: urlString) else {
             return .error(message: "無効なURLです")
@@ -49,7 +49,11 @@ class CheckAccountRepository {
         
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        // 共通ヘッダーを設定
+        for (key, value) in apiConfig.commonHeaders {
+            request.setValue(value, forHTTPHeaderField: key)
+        }
         
         do {
             let (data, response) = try await URLSession.shared.data(for: request)

@@ -79,7 +79,7 @@ enum RegisterResult {
 
 // MARK: - Repository
 class RegisterRepository {
-    private let baseURL = "https://5a6abf98d0e8.ngrok-free.app"
+    private let apiConfig = APIConfig.shared
     
     func register(username: String, password: String, email: String, location: String = "Japan") async -> RegisterResult {
         // バリデーション
@@ -105,14 +105,17 @@ class RegisterRepository {
             location: location
         )
         
-        guard let url = URL(string: "\(baseURL)/user") else {
+        guard let url = URL(string: "\(apiConfig.baseURL)\(APIConfig.Endpoints.register)") else {
             return .error(message: "無効なURLです")
         }
         
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("ngrok-skip-browser-warning", forHTTPHeaderField: "ngrok-skip-browser-warning")
+        
+        // 共通ヘッダーを設定
+        for (key, value) in apiConfig.commonHeaders {
+            request.setValue(value, forHTTPHeaderField: key)
+        }
         
         do {
             let jsonData = try JSONEncoder().encode(requestBody)

@@ -9,7 +9,6 @@ import SwiftUI
 
 struct ProfileSettingView: View {
     @StateObject private var viewModel: ProfileSettingViewModel
-    @Environment(\.dismiss) private var dismiss
     
     init() {
         self._viewModel = StateObject(wrappedValue: ProfileSettingViewModel())
