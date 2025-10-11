@@ -338,14 +338,23 @@ struct RecipeView: View {
             HStack {
                 // カメラ映像は自動スクロールがONの時のみ表示
                 if viewModel.isHandsFreeModeOn && viewModel.autoScrollEnabled {
-                    CameraView(cameraService: viewModel.cameraService)
-                        .frame(width: 100, height: 150)
-                        .cornerRadius(10)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 10)
-                                .stroke(viewModel.isFaceDetected ? Color.green : Color.red, lineWidth: 3)
-                        )
-                        .padding()
+                    
+                    VStack(alignment: .leading) {
+                        Text(viewModel.isFaceDetected ? "顔を認識中👀" : "顔を認識できません")
+                            .font(.headline)
+                            .padding(8)
+                            .background(.thinMaterial)
+                            .cornerRadius(8)
+                        
+                        CameraView(cameraService: viewModel.cameraService)
+                            .frame(width: 100, height: 150)
+                            .cornerRadius(10)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .stroke(viewModel.isFaceDetected ? Color.green : Color.red, lineWidth: 3)
+                            )
+                    }
+                    .padding(.horizontal)
                 }
                 Spacer()
             }
@@ -738,18 +747,7 @@ struct HandsFreeControlView: View {
     var body: some View {
         VStack {
             if isHandsFreeModeOn {
-                VStack(spacing: 8) {
-                    // ウィンク操作が有効な場合のみ顔認識メッセージを表示
-                    if autoScrollEnabled {
-                        Text(isFaceDetected ? "顔を認識中👀" : "顔を認識できません")
-                            .font(.headline)
-                            .padding(8)
-                            .background(.thinMaterial)
-                            .cornerRadius(8)
-                    }
-                }
-                .padding(.bottom, 8)
-                
+                Spacer()
                 Button(action: onToggle) {
                     Text("ハンズフリーモード OFF")
                         .fontWeight(.bold)
