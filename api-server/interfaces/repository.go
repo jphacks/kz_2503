@@ -7,6 +7,7 @@ type Repository interface {
 	// ユーザー関連
 	CreateUser(user models.User) (*models.User, error)
 	GetUser(userID string) (*models.User, error)
+	GetUserByEmail(email string) (*models.User, error)
 	UpdateUser(userID string, updates map[string]interface{}) error
 	DeleteUser(userID string) error
 	LoginUser(userID, passwordHash string) (*models.User, error)

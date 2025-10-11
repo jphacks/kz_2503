@@ -52,6 +52,27 @@ func GetUser(c *gin.Context) {
 	})
 }
 
+// メールアドレスでユーザー存在確認
+func GetUserByEmail(c *gin.Context) {
+	email := c.Param("email")
+
+	user, err := userRepo.GetUserByEmail(email)
+	if err != nil {
+		// ユーザーが見つからない場合は202を返す
+		c.JSON(http.StatusAccepted, gin.H{
+			"status":  202,
+			"message": "アカウントが存在しません",
+		})
+		return
+	}
+
+	// ユーザーが見つかった場合は200を返す
+	c.JSON(http.StatusOK, gin.H{
+		"status":  200,
+		"user_id": user.UserID,
+	})
+}
+
 // ユーザー削除
 func DeleteUser(c *gin.Context) {
 	userID := c.Param("user_id")
