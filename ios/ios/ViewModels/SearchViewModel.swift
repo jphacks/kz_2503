@@ -1,55 +1,89 @@
-// Viewmodels/SearchViewModel.swift
+//
+//  SearchViewModel.swift
+//  iOS
+//
+//  Created by 三ツ井渚 on 2025/10/11.
+//
+
 import Foundation
 import SwiftUI
 import Combine
 
 @MainActor
 final class SearchViewModel: ObservableObject {
-    @Published var query: String = ""
-    @Published var titles: [String] = []
+    @Published var searchText: String = ""
+    @Published var searchHistory: [String] = []
+    @Published var searchResults: [SearchRecipe] = []
+    @Published var isLoading: Bool = false
     @Published var errorMessage: String?
-
-    private let decoder: JSONDecoder = {
-        let d = JSONDecoder()
-        d.keyDecodingStrategy = .convertFromSnakeCase
-        return d
-    }()
-
-    func submitSearch() {
-        let q = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !q.isEmpty else { titles = []; return }
-        Task { await searchTitles(q) }
+    @Published var showSearchResults: Bool = false
+    
+    private let searchHistoryRepository = SearchHistoryRepository()
+    private let searchWordRepository = SearchWordRepository()
+    
+    init() {
+        loadSearchHistory()
     }
-
-    func clearQuery() {
-        query = ""
-        titles = []
-        errorMessage = nil
-    }
-
-    private func searchTitles(_ keyword: String) async {
-        errorMessage = nil
-        do {
-            var url = URL(string: APIConfig.shared.baseURL)!
-            url.append(path: "search")
-            url.append(path: "word")
-            url.append(path: keyword)                // ← エンコードは append がやってくれる
-
-            let (data, resp) = try await URLSession.shared.data(from: url)
-            guard let http = resp as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
-                throw URLError(.badServerResponse)
+    
+    func loadSearchHistory() {
+        Task {
+            let result = await searchHistoryRepository.getSearchHistory()
+            switch result {
+            case .success(let words):
+                searchHistory = words
+            case .error(let message):
+                print("Failed to load search history: \(message)")
             }
-
-            // レスポンスは `{ status: 200, recipes: [{ recipe_id, title, ... }] }`
-            struct Item: Decodable { let title: String }
-            struct Root: Decodable { let recipes: [Item] }
-
-            let root = try decoder.decode(Root.self, from: data)
-            titles = root.recipes.map { $0.title }   // ← まずはタイトルだけ
-        } catch {
-            errorMessage = "読み込みに失敗しました"
-            titles = []
-            print("[Search] error:", error.localizedDescription)
         }
+    }
+    
+    func performSearch() {
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else { return }
+        
+        Task {
+            await searchWord(query)
+        }
+    }
+    
+    func searchFromHistory(_ word: String) {
+        searchText = word
+        Task {
+            await searchWord(word)
+        }
+    }
+    
+    private func searchWord(_ word: String) async {
+        isLoading = true
+        errorMessage = nil
+        
+        let result = await searchWordRepository.searchWord(word)
+        
+        isLoading = false
+        
+        switch result {
+        case .success(let recipes):
+            searchResults = recipes
+            showSearchResults = true
+            // 履歴に追加（重複を避ける）
+            if !searchHistory.contains(word) {
+                searchHistory.insert(word, at: 0)
+                // 履歴は最大10件まで
+                if searchHistory.count > 10 {
+                    searchHistory = Array(searchHistory.prefix(10))
+                }
+            }
+            
+        case .error(let message):
+            errorMessage = message
+            searchResults = []
+        }
+    }
+    
+    func clearSearch() {
+        searchText = ""
+        searchResults = []
+        showSearchResults = false
+        errorMessage = nil
     }
 }
