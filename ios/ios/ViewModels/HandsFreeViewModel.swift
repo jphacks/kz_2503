@@ -23,6 +23,11 @@ class HandsFreeViewModel: NSObject, ObservableObject {
     @Published var autoScrollEnabled = false // 自動スクロール（ウィンク検出）が有効かどうか
     @Published var latestVoiceText: String? // 音声入力でキャプチャした最新の文章（1つのみ）
     
+    // MARK: - Callback Properties
+    var onScrollRequest: ((ScrollRequest) -> Void)?
+    var onFaceDetected: ((Bool) -> Void)?
+    var onVoiceTextCaptured: ((String?) -> Void)?
+    
     // MARK: - Services
     let cameraService = CameraService()
     private let winkDetectionService = WinkDetectionService()
@@ -59,12 +64,14 @@ class HandsFreeViewModel: NSObject, ObservableObject {
         winkDetectionService.onScrollRequest = { [weak self] request in
             DispatchQueue.main.async {
                 self?.scrollRequest = request
+                self?.onScrollRequest?(request)
             }
         }
         
         winkDetectionService.onFaceDetected = { [weak self] isDetected in
             DispatchQueue.main.async {
                 self?.isFaceDetected = isDetected
+                self?.onFaceDetected?(isDetected)
             }
         }
         
@@ -72,6 +79,7 @@ class HandsFreeViewModel: NSObject, ObservableObject {
         voiceRecognitionService.onTextCaptured = { [weak self] capturedText in
             guard let self = self else { return }
             self.latestVoiceText = capturedText
+            self.onVoiceTextCaptured?(capturedText)
             print("【HandsFreeViewModel】: 📝 最新の音声テキストを更新: 「\(capturedText)」")
         }
     }

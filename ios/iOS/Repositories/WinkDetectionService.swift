@@ -120,8 +120,12 @@ class WinkDetectionService {
     private func handleEyeAction(faceObservation: VNFaceObservation) {
         guard let landmarks = faceObservation.landmarks else { return }
         
-        let currentLeftEyeOpenness = calculateEyeOpenness(for: landmarks.rightEye)
-        let currentRightEyeOpenness = calculateEyeOpenness(for: landmarks.leftEye)
+        let currentLeftEyeOpenness = calculateEyeOpenness(for: landmarks.leftEye)
+        let currentRightEyeOpenness = calculateEyeOpenness(for: landmarks.rightEye)
+        
+        // デバッグログ：左右の目の開き具合を比較
+        print("【目の開き具合】左目: \(String(format: "%.3f", currentLeftEyeOpenness)), 右目: \(String(format: "%.3f", currentRightEyeOpenness))")
+        print("【ベースライン】左目: \(String(format: "%.3f", baselineLeftEyeOpenness)), 右目: \(String(format: "%.3f", baselineRightEyeOpenness))")
         
         // ベースラインの確立
         if baselineFrameCount < baselineFramesNeeded {
