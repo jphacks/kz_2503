@@ -28,19 +28,26 @@ struct AIAvailabilityChecker {
 }
 #endif
 
+import Foundation
 #if !targetEnvironment(simulator)
 import FoundationModels
 #endif
 
 final class AIService {
+    #if !targetEnvironment(simulator)
     private let session = LanguageModelSession()
+    #endif
     
     func availability() -> AIAvailabilityState { 
-        AIAvailabilityChecker.check() 
+        AIAvailabilityChecker.check()
     }
 
     func reply(_ prompt: String) async throws -> String {
+        #if targetEnvironment(simulator)
+        throw NSError(domain: "AIService", code: -1, userInfo: [NSLocalizedDescriptionKey: "AI機能はシミュレーターでは利用できません"])
+        #else
         let res: LanguageModelSession.Response<String> = try await session.respond(to: prompt)
         return res.content
+        #endif
     }
 }

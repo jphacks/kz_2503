@@ -16,7 +16,15 @@ struct ContentView: View {
                     Label("Page2", systemImage: "book.pages.fill")
                 }
                 .tag(1)
+            
+            NavigationStack {
+                AIChatView()
             }
+            .tabItem {
+                Label("AI Chat", systemImage: "bubble.left.and.text.bubble.fill")
+            }
+            .tag(2)
+        }
     }
 }
 
