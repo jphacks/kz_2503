@@ -70,9 +70,6 @@ class CameraService: NSObject {
             DispatchQueue.global(qos: .userInitiated).async {
                 if !self.captureSession.isRunning {
                     self.captureSession.startRunning()
-                    #if DEBUG
-                    print("[Camera] captureSession started")
-                    #endif
                 }
             }
         }

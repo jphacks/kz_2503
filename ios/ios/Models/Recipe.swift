@@ -1,10 +1,3 @@
-//
-//  Recipe.swift
-//  iOS
-//
-//  Created by AI Assistant on 2025/01/03.
-//
-
 import Foundation
 
 struct Recipe: Codable {
@@ -33,7 +26,7 @@ struct Recipe: Codable {
     }
 }
 
-struct RecipeMaterial: Codable {
+struct RecipeMaterial: Codable, Hashable {
     let materialName: String
     let materialCount: String
     
