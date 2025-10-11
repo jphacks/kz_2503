@@ -30,6 +30,9 @@ struct RecipeView: View {
     @State private var lastScrollPosition: CGFloat = 0 // 前回のスクロール位置
     @State private var isWinkScrolling: Bool = false // ウィンクによるスクロール中かどうか
     
+    // MARK: - Border Animation
+    @State private var gradientRotation: Double = 0 // グラデーション枠線の回転角度
+    
     // MARK: - Constants
     private let fixedScrollAmount: CGFloat = 250 // 1回のスクロール量（ピクセル）※現在は使用していません
 
@@ -61,11 +64,29 @@ struct RecipeView: View {
             }
         }
         .overlay(
-            // ハンズフリーモードの時のみ枠線を表示
+            // ハンズフリーモードの時のみアニメーションする枠線を表示
             Group {
                 if viewModel.isHandsFreeModeOn {
-                    ContainerRelativeShape()
-                        .stroke(Color.blue, lineWidth: 10)
+                    AnimatedGradientBorder(rotation: gradientRotation)
+                        .onChange(of: viewModel.isHandsFreeModeOn) { _, isOn in
+                            if isOn {
+                                // ハンズフリーモードON時にアニメーション開始
+                                withAnimation(.linear(duration: 4.0).repeatForever(autoreverses: false)) {
+                                    gradientRotation = 360
+                                }
+                            } else {
+                                // ハンズフリーモードOFF時にリセット
+                                gradientRotation = 0
+                            }
+                        }
+                        .onAppear {
+                            // 初回表示時にアニメーション開始
+                            if viewModel.isHandsFreeModeOn {
+                                withAnimation(.linear(duration: 4.0).repeatForever(autoreverses: false)) {
+                                    gradientRotation = 360
+                                }
+                            }
+                        }
                 }
             }
         )
@@ -833,5 +854,35 @@ struct ScrollOffsetPreferenceKey: PreferenceKey {
     )
     .padding()
     .background(Color.gray.opacity(0.1))
+}
+
+/// アニメーションするグラデーション枠線
+struct AnimatedGradientBorder: View {
+    let rotation: Double
+    
+    var body: some View {
+        ContainerRelativeShape()
+            .strokeBorder(
+                AngularGradient(
+                    gradient: Gradient(colors: [
+                        .grapfruet,
+                        .maskat,
+                        .grapfruet
+                    ]),
+                    center: .center,
+                    startAngle: .degrees(rotation),
+                    endAngle: .degrees(rotation + 360)
+                ),
+                lineWidth: 5
+            )
+    }
+}
+
+#Preview("アニメーション枠線") {
+    ZStack {
+        Color.gray.opacity(0.1)
+        AnimatedGradientBorder(rotation: 0)
+    }
+    .ignoresSafeArea()
 }
 
