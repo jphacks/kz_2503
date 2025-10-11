@@ -4,6 +4,7 @@ import (
 	"api-server/interfaces"
 	"api-server/models"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -185,6 +186,12 @@ func (r *MockRepository) GetPopularRecipes() ([]models.Recipe, error) {
 	for _, recipe := range r.data.Recipes {
 		recipes = append(recipes, recipe)
 	}
+
+	// serving_countで降順ソート
+	sort.Slice(recipes, func(i, j int) bool {
+		return recipes[i].ServingCount > recipes[j].ServingCount
+	})
+
 	return recipes, nil
 }
 
