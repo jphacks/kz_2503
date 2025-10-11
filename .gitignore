@@ -1,2 +1,4 @@
 *.xcuserstate
 *.xcuserdata/
+/api-server/supabase/
+/api-server/config.env
