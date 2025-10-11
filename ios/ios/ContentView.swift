@@ -1,30 +1,59 @@
 import SwiftUI
 
 struct ContentView: View {
+    @State private var isLoggedIn = false
+    @State private var isLoading = true
+    private let userIdRepository = UserIdRepository()
+    
     var body: some View {
-        @State var selection = 0
-        
-        TabView(selection: $selection) {
-            StartView()   // ホーム画面
-                .tabItem {
-                    Label("Page1", systemImage: "house")
+        Group {
+            if isLoading {
+                // ローディング画面
+                VStack {
+                    ProgressView()
+                        .scaleEffect(1.5)
+                    Text("読み込み中...")
+                        .padding(.top, 16)
                 }
-                .tag(0)
+            } else if isLoggedIn {
+                // ログイン済みの場合 - メインのタブビュー
+                TabView {
+                    NavigationStack {
+                        SearchView()
+                    }
+                    .tabItem {
+                        Label("検索", systemImage: "magnifyingglass")
+                    }
+                    .tag(0)
 
-            RecipeView(recipeId: "123e4567-e89b-12d3-a456-426614174001")   // レシピ詳細画面
-                .tabItem {
-                    Label("Page2", systemImage: "book.pages.fill")
+                    RecipeView()
+                        .tabItem {
+                            Label("レシピ", systemImage: "book.pages.fill")
+                        }
+                        .tag(1)
+                    
+                    NavigationStack {
+                        AIChatView()
+                    }
+                    .tabItem {
+                        Label("AI Chat", systemImage: "bubble.left.and.text.bubble.fill")
+                    }
+                    .tag(2)
                 }
-                .tag(1)
-            
-            NavigationStack {
-                AIChatView()
+            } else {
+                // ログインしていない場合 - StartView
+                StartView()
             }
-            .tabItem {
-                Label("AI Chat", systemImage: "bubble.left.and.text.bubble.fill")
-            }
-            .tag(2)
         }
+        .onAppear {
+            checkLoginStatus()
+        }
+    }
+    
+    private func checkLoginStatus() {
+        // ローカルにuser_idが保存されているかチェック
+        isLoggedIn = userIdRepository.hasUserId()
+        isLoading = false
     }
 }
 
