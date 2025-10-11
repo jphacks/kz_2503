@@ -2,6 +2,14 @@
   <img width="500" alt="image" src="https://github.com/user-attachments/assets/79d5353f-7a39-4156-8b38-0d589f2c5650" />
 </p>
 
+<h1 align="center">WinCook 👑</h1> <p align="center"> ウィンクでページ送り、AIと話しながら作るクッキングアプリ </p> 
+<p align="center"> <img src="https://img.shields.io/badge/iOS-17%2B-blue" alt="iOS 18+"> 
+  <img src="https://img.shields.io/badge/Swift-5.10%2B-orange" alt="Swift 5.10+"> 
+  <img src="https://img.shields.io/badge/SwiftUI-✓-brightgreen" alt="SwiftUI"> 
+  <img src="https://img.shields.io/badge/Vision-Wink%20Detection-lightgrey" alt="Vision Wink Detection"> </p>
+
+---
+
 ## 製品概要
 **WinCook** はウィンク操作と AI 会話で料理を革新するクッキングアプリです。
 
@@ -43,6 +51,8 @@
 - iOS26 などの最新技術を使用した、革新的なユーザー体験
 - スケーラビリティを考慮したアーキテクチャ
 
+---
+
 ## 開発技術
 - iOS：Swift 5+ / SwiftUI
 - バックエンド：Go
@@ -65,7 +75,7 @@
 - Face Tracking：Vision Framework
 
 #### デバイス
-* iPhone / iOS 26.0以上
+* iPhone / iOS 26.0以上 (appleintelligence搭載端末推奨)
 
 ### 独自技術
 #### ハッカソンで開発した独自機能・技術
