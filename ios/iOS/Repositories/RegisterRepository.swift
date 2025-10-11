@@ -22,14 +22,42 @@ struct RegisterRequest: Codable {
     }
 }
 
+struct User: Codable {
+    let userId: String
+    let username: String
+    let passwordHash: String
+    let mailadress: String
+    let profile: String
+    let icon: String
+    let isWink: Bool
+    let location: String
+    let isAi: Bool
+    let createdAt: String
+    let updatedAt: String
+    
+    enum CodingKeys: String, CodingKey {
+        case userId = "user_id"
+        case username
+        case passwordHash = "password_hash"
+        case mailadress
+        case profile
+        case icon
+        case isWink = "is_wink"
+        case location
+        case isAi = "is_ai"
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+    }
+}
+
 struct RegisterResponse: Codable {
     let status: Int
-    let userId: String?
+    let user: User?
     let message: String?
     
     enum CodingKeys: String, CodingKey {
         case status
-        case userId = "user_id"
+        case user
         case message
     }
     
@@ -37,10 +65,10 @@ struct RegisterResponse: Codable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         status = try container.decode(Int.self, forKey: .status)
-        userId = try container.decodeIfPresent(String.self, forKey: .userId)
+        user = try container.decodeIfPresent(User.self, forKey: .user)
         message = try container.decodeIfPresent(String.self, forKey: .message)
         
-        print("Decoded Response - Status: \(status), UserId: \(userId ?? "nil"), Message: \(message ?? "nil")")
+        print("Decoded Response - Status: \(status), UserId: \(user?.userId ?? "nil"), Message: \(message ?? "nil")")
     }
 }
 
@@ -51,7 +79,7 @@ enum RegisterResult {
 
 // MARK: - Repository
 class RegisterRepository {
-    private let baseURL = "https://35db6a68b9f6.ngrok-free.app"
+    private let baseURL = "https://5a6abf98d0e8.ngrok-free.app"
     
     func register(username: String, password: String, email: String, location: String = "Japan") async -> RegisterResult {
         // バリデーション
@@ -112,8 +140,8 @@ class RegisterRepository {
             
             switch httpResponse.statusCode {
             case 200:
-                if let userId = registerResponse.userId {
-                    return .success(userId: userId)
+                if let user = registerResponse.user {
+                    return .success(userId: user.userId)
                 } else {
                     return .error(message: "ユーザーIDが取得できませんでした")
                 }
