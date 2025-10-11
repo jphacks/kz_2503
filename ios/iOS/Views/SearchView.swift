@@ -107,23 +107,63 @@ struct SearchView: View {
                             }
                         }
                         
-                        // 新着
+                        // 人気レシピ
                         VStack(alignment: .leading, spacing: 16) {
-                            Text("新着")
+                            Text("人気レシピ")
                                 .font(.headline)
                                 .foregroundColor(.black)
                                 .padding(.horizontal, 20)
                             
-                            LazyVStack(spacing: 16) {
-                                ForEach(0..<3, id: \.self) { index in
-                                    RecipeCardView(
-                                        title: "料理名",
-                                        ingredients: ["材料", "材料2", "材料3"],
-                                        chefName: "ユーザー名"
+                            if viewModel.isLoadingPopularRecipes {
+                                HStack {
+                                    Spacer()
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle())
+                                    Spacer()
+                                }
+                                .padding(.vertical, 20)
+                            } else if let errorMessage = viewModel.popularRecipesErrorMessage {
+                                VStack(spacing: 12) {
+                                    Text("人気レシピの読み込みに失敗しました")
+                                        .font(.caption)
+                                        .foregroundColor(.red)
+                                    Text(errorMessage)
+                                        .font(.caption2)
+                                        .foregroundColor(.gray)
+                                        .multilineTextAlignment(.center)
+                                    Button("再試行") {
+                                        viewModel.loadPopularRecipes()
+                                    }
+                                    .font(.caption)
+                                    .foregroundColor(.blue)
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 8)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 16)
+                                            .stroke(Color.blue, lineWidth: 1)
                                     )
                                 }
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 20)
+                            } else if viewModel.popularRecipes.isEmpty {
+                                Text("人気レシピが見つかりませんでした")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                                    .padding(.horizontal, 20)
+                                    .padding(.vertical, 20)
+                            } else {
+                                LazyVStack(spacing: 16) {
+                                    ForEach(viewModel.popularRecipes, id: \.recipeId) { recipe in
+                                        RecipeCardView(
+                                            title: recipe.title,
+                                            ingredients: recipe.recipeMaterial, // 実際の材料データを使用
+                                            chefName: "ユーザー", // chef情報がないためデフォルト値
+                                            imageUrl: recipe.pictureUrl.isEmpty ? nil : recipe.pictureUrl
+                                        )
+                                    }
+                                }
+                                .padding(.horizontal, 20)
                             }
-                            .padding(.horizontal, 20)
                         }
                     }
                     .padding(.top, 20)

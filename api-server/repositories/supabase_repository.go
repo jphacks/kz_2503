@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 )
 
 type SupabaseRepository struct {
@@ -375,11 +376,15 @@ func (r *SupabaseRepository) GetPopularRecipes() ([]models.Recipe, error) {
 	var recipes []models.Recipe
 	for _, recipeData := range results {
 		recipe := models.Recipe{
-			RecipeID:   recipeData["id"].(string),
-			UserID:     recipeData["user_id"].(string),
-			CategoryID: recipeData["category_id"].(string),
-			Title:      recipeData["title"].(string),
-			Status:     recipeData["status"].(string),
+			RecipeID:       recipeData["id"].(string),
+			UserID:         recipeData["user_id"].(string),
+			CategoryID:     recipeData["category_id"].(string),
+			Title:          recipeData["title"].(string),
+			Status:         recipeData["status"].(string),
+			RecipeMaterial: []models.RecipeMaterial{}, // 空配列で初期化
+			RecipeContent:  []models.RecipeContent{},  // 空配列で初期化
+			CreatedAt:      time.Now(),                // 現在時刻を設定
+			UpdatedAt:      time.Now(),                // 現在時刻を設定
 		}
 		if point, ok := recipeData["point"].(string); ok {
 			recipe.Point = point

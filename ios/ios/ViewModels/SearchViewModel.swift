@@ -14,15 +14,20 @@ final class SearchViewModel: ObservableObject {
     @Published var searchText: String = ""
     @Published var searchHistory: [String] = []
     @Published var searchResults: [SearchRecipe] = []
+    @Published var popularRecipes: [PopularRecipe] = []
     @Published var isLoading: Bool = false
+    @Published var isLoadingPopularRecipes: Bool = false
     @Published var errorMessage: String?
+    @Published var popularRecipesErrorMessage: String?
     @Published var showSearchResults: Bool = false
     
     private let searchHistoryRepository = SearchHistoryRepository()
     private let searchWordRepository = SearchWordRepository()
+    private let popularRecipeRepository = PopularRecipeRepository()
     
     init() {
         loadSearchHistory()
+        loadPopularRecipes()
     }
     
     func loadSearchHistory() {
@@ -85,5 +90,27 @@ final class SearchViewModel: ObservableObject {
         searchResults = []
         showSearchResults = false
         errorMessage = nil
+    }
+    
+    func loadPopularRecipes() {
+        isLoadingPopularRecipes = true
+        popularRecipesErrorMessage = nil
+        
+        Task {
+            let result = await popularRecipeRepository.getPopularRecipes()
+            
+            isLoadingPopularRecipes = false
+            
+            switch result {
+            case .success(let recipes):
+                popularRecipes = recipes
+                print("✅ Loaded \(recipes.count) popular recipes")
+            case .error(let message):
+                print("❌ Failed to load popular recipes: \(message)")
+                popularRecipesErrorMessage = message
+                // エラーが発生してもUIを壊さないように、空の配列を設定
+                popularRecipes = []
+            }
+        }
     }
 }
