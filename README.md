@@ -32,25 +32,22 @@
 - Custom Adapter を用いた AI のチューニング
 
 ### 注力したこと（こだわり等）
-* 
-* 
+- iOS26 などの最新技術を使用した、革新的なユーザー体験
+- スケーラビリティを考慮したアーキテクチャ
 
 ## 開発技術
 - iOS：Swift 5+ / SwiftUI
-- 機械視覚：Vision（顔/目トラッキング、ウィンク推定）
-- 音声：AVFoundation（TTS）
-- ローカルDB：SwifData
 - 外部API：
-- DB：Supabase
+- DB：MySQL
 - バックエンド：Go
 
 ### 活用した技術
-- 
-
+- DB：MySQL
+- 音声：AVFoundation（TTS）
 
 #### API・データ
-* 
-* 
+- 機械視覚：Vision（顔/目トラッキング、ウィンク推定）
+- ローカルDB：SwifData
 
 #### フレームワーク・ライブラリ・モジュール
 * 
