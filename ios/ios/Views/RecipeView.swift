@@ -706,7 +706,7 @@ struct AIConversationBubble: View {
         VStack(alignment: .leading, spacing: 12) {
             // ユーザーメッセージ部分
             VStack(alignment: .leading, spacing: 13) {
-                Text("\(triggerWord ?? "WinCook") \(userMessage.text) >")
+                Text("ウィンくん \(userMessage.text) >")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                 
@@ -871,7 +871,7 @@ struct AnimatedGradientBorder: View {
                     startAngle: .degrees(rotation),
                     endAngle: .degrees(rotation + 360)
                 ),
-                lineWidth: 5
+                lineWidth: 7
             )
     }
 }
