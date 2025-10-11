@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct LoginView: View {
-    @State private var email: String = ""
+    @StateObject private var viewModel = LoginViewModel()
     
     var body: some View {
         VStack(spacing: 30) {
@@ -33,7 +33,7 @@ struct LoginView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 
                 // メールアドレス入力フィールド
-                TextField("メールアドレス", text: $email)
+                TextField("メールアドレス", text: $viewModel.email)
                     .textFieldStyle(.plain) // 既存のRoundedBorderを外す
                     .padding(.horizontal, 12)
                     .frame(height: 52)
@@ -62,16 +62,26 @@ struct LoginView: View {
             
             // 次へボタン
             Button(action: {
-                // TODO: 次へボタンのアクション
+                Task {
+                    await viewModel.checkAccount()
+                }
             }) {
-                Text("次へ")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: 200)
-                    .frame(height: 50)
-                    .background(Color.theme)
-                    .cornerRadius(8)
+                HStack {
+                    if viewModel.isLoading {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .scaleEffect(0.8)
+                    }
+                    Text(viewModel.isLoading ? "確認中..." : "次へ")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                }
+                .frame(maxWidth: 200)
+                .frame(height: 50)
+                .background(viewModel.isLoading ? Color.gray : Color.theme)
+                .cornerRadius(8)
             }
+            .disabled(viewModel.isLoading)
             .padding(.horizontal, 20)
             .padding(.bottom, 50)
             
@@ -79,10 +89,73 @@ struct LoginView: View {
             Spacer(minLength: 200)
         }
         .background(Color.white)
+        .overlay(
+            // 結果表示
+            VStack {
+                if viewModel.showResult {
+                    VStack(spacing: 12) {
+                        HStack {
+                            Image(systemName: resultIcon)
+                                .foregroundColor(resultColor)
+                                .font(.title2)
+                            
+                            Text(viewModel.resultMessage)
+                                .font(.body)
+                                .foregroundColor(.black)
+                                .multilineTextAlignment(.leading)
+                        }
+                        .padding()
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(resultColor.opacity(0.1))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(resultColor.opacity(0.3), lineWidth: 1)
+                                )
+                        )
+                        .padding(.horizontal, 20)
+                        
+                        Button("閉じる") {
+                            viewModel.clearResult()
+                        }
+                        .font(.caption)
+                        .foregroundColor(resultColor)
+                    }
+                    .transition(.opacity.combined(with: .scale))
+                }
+            }
+            .animation(.easeInOut(duration: 0.3), value: viewModel.showResult)
+        )
+    }
+    
+    // MARK: - Computed Properties
+    private var resultIcon: String {
+        switch viewModel.resultType {
+        case .success:
+            return "checkmark.circle.fill"
+        case .accountNotFound:
+            return "person.crop.circle.badge.exclamationmark"
+        case .error:
+            return "exclamationmark.triangle.fill"
+        case .none:
+            return ""
+        }
+    }
+    
+    private var resultColor: Color {
+        switch viewModel.resultType {
+        case .success:
+            return .green
+        case .accountNotFound:
+            return .orange
+        case .error:
+            return .red
+        case .none:
+            return .clear
+        }
     }
 }
 
 #Preview {
     LoginView()
 }
-

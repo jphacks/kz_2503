@@ -5,7 +5,7 @@ struct ContentView: View {
         @State var selection = 0
         
         TabView(selection: $selection) {
-            HomeView()   // ホーム画面
+            LoginView()   // ホーム画面
                 .tabItem {
                     Label("Page1", systemImage: "house")
                 }
