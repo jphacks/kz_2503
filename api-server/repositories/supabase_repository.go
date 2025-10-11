@@ -365,7 +365,8 @@ func (r *SupabaseRepository) DeleteRecipe(recipeID string) error {
 }
 
 func (r *SupabaseRepository) GetPopularRecipes() ([]models.Recipe, error) {
-	endpoint := fmt.Sprintf("%s/rest/v1/recipes", r.baseURL)
+	// serving_countで降順ソートして人気レシピを取得
+	endpoint := fmt.Sprintf("%s/rest/v1/recipes?order=serving_count.desc", r.baseURL)
 	results, err := r.makeRequest("GET", endpoint, nil)
 	if err != nil {
 		return nil, err
