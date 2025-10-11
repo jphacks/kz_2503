@@ -14,12 +14,23 @@ enum ScrollDirection {
 }
 
 /// ウィンクの状態を管理するenum
-private enum WinkState {
+private enum WinkState: CustomStringConvertible {
     case eyesOpen
     case winkStarted(eye: WinkedEye, timestamp: Date)
     
     enum WinkedEye {
         case left, right
+    }
+    
+    var description: String {
+        switch self {
+        case .eyesOpen:
+            return "両目開いている"
+        case .winkStarted(let eye, let timestamp):
+            let duration = Date().timeIntervalSince(timestamp)
+            let eyeStr = eye == .left ? "左目" : "右目"
+            return "\(eyeStr)ウィンク中 (\(String(format: "%.2f", duration))秒)"
+        }
     }
 }
 
@@ -36,8 +47,10 @@ class HandsFreeViewModel: NSObject, ObservableObject {
     // MARK: - Wink Detection State
     private var winkState: WinkState = .eyesOpen
     private var lastScrollTime: Date?
-    private var baselineLeftEyeOpenness: CGFloat = 0.5
-    private var baselineRightEyeOpenness: CGFloat = 0.5
+    private var baselineLeftEyeOpenness: CGFloat = 0.0
+    private var baselineRightEyeOpenness: CGFloat = 0.0
+    private var baselineFrameCount = 0 // ベースライン確立用のフレームカウンタ
+    private let baselineFramesNeeded = 10 // ベースライン確立に必要なフレーム数
     // フリッカー抑制用の追跡情報
     private var trackedFaceUUID: UUID?
     private var trackedBoundingBox: CGRect?
@@ -63,6 +76,11 @@ class HandsFreeViewModel: NSObject, ObservableObject {
             if self.isHandsFreeModeOn {
                 self.cameraService.startSession()
                 self.startTrackingStatusTimer()
+                // ベースラインをリセット
+                self.baselineLeftEyeOpenness = 0.0
+                self.baselineRightEyeOpenness = 0.0
+                self.baselineFrameCount = 0
+                print("【ウィンク検出】: ベースライン初期化開始")
             } else {
                 self.cameraService.stopSession()
                 self.isFaceDetected = false
@@ -73,6 +91,10 @@ class HandsFreeViewModel: NSObject, ObservableObject {
                 self.stopTrackingStatusTimer()
                 // 📌 モードOFFでフラグをリセット
                 self.hasDetectedFaceInThisSession = false
+                // ベースラインをリセット
+                self.baselineLeftEyeOpenness = 0.0
+                self.baselineRightEyeOpenness = 0.0
+                self.baselineFrameCount = 0
             }
         }
     }
@@ -196,8 +218,26 @@ class HandsFreeViewModel: NSObject, ObservableObject {
         let currentLeftEyeOpenness = self.calculateEyeOpenness(for: landmarks.leftEye)
         let currentRightEyeOpenness = self.calculateEyeOpenness(for: landmarks.rightEye)
         
-        let winkCloseThreshold: CGFloat = 0.4
-        let winkOpenThreshold: CGFloat = 0.6
+        // ベースラインの確立（最初の数フレーム）
+        if baselineFrameCount < baselineFramesNeeded {
+            if baselineFrameCount == 0 {
+                baselineLeftEyeOpenness = currentLeftEyeOpenness
+                baselineRightEyeOpenness = currentRightEyeOpenness
+            } else {
+                baselineLeftEyeOpenness = (baselineLeftEyeOpenness * CGFloat(baselineFrameCount) + currentLeftEyeOpenness) / CGFloat(baselineFrameCount + 1)
+                baselineRightEyeOpenness = (baselineRightEyeOpenness * CGFloat(baselineFrameCount) + currentRightEyeOpenness) / CGFloat(baselineFrameCount + 1)
+            }
+            baselineFrameCount += 1
+            
+            if baselineFrameCount == baselineFramesNeeded {
+                print("【ウィンク検出】: ベースライン確立完了 - 左目: \(String(format: "%.4f", baselineLeftEyeOpenness)), 右目: \(String(format: "%.4f", baselineRightEyeOpenness))")
+            }
+            return
+        }
+        
+        // ウィンク検出の閾値を調整（より敏感に）
+        let winkCloseThreshold: CGFloat = 0.5  // 0.4 -> 0.5 に緩和
+        let winkOpenThreshold: CGFloat = 0.7   // 0.6 -> 0.7 に緩和
 
         var didLeftEyeClose = false
         var didRightEyeClose = false
@@ -210,15 +250,25 @@ class HandsFreeViewModel: NSObject, ObservableObject {
             didRightEyeClose = true
         }
 
+        // デバッグログ（10フレームに1回表示）
+        if Int.random(in: 0..<10) == 0 {
+            print("【ウィンク検出】目の状態 - 左目: \(String(format: "%.4f", currentLeftEyeOpenness)) (閾値: \(String(format: "%.4f", baselineLeftEyeOpenness * winkCloseThreshold))), 右目: \(String(format: "%.4f", currentRightEyeOpenness)) (閾値: \(String(format: "%.4f", baselineRightEyeOpenness * winkCloseThreshold))), 状態: \(winkState)")
+        }
+
         switch winkState {
         case .eyesOpen:
             if didLeftEyeClose && !didRightEyeClose {
                 winkState = .winkStarted(eye: .left, timestamp: Date())
+                print("【ウィンク検出】: 👁️ 左目ウィンク開始検出！")
             } else if didRightEyeClose && !didLeftEyeClose {
                 winkState = .winkStarted(eye: .right, timestamp: Date())
+                print("【ウィンク検出】: 👁️ 右目ウィンク開始検出！")
             } else {
-                baselineLeftEyeOpenness = (baselineLeftEyeOpenness * 0.95) + (currentLeftEyeOpenness * 0.05)
-                baselineRightEyeOpenness = (baselineRightEyeOpenness * 0.95) + (currentRightEyeOpenness * 0.05)
+                // 両目が開いている場合のみベースラインを微調整
+                if !didLeftEyeClose && !didRightEyeClose {
+                    baselineLeftEyeOpenness = (baselineLeftEyeOpenness * 0.98) + (currentLeftEyeOpenness * 0.02)
+                    baselineRightEyeOpenness = (baselineRightEyeOpenness * 0.98) + (currentRightEyeOpenness * 0.02)
+                }
             }
             
         case .winkStarted(let eye, let timestamp):
@@ -232,14 +282,18 @@ class HandsFreeViewModel: NSObject, ObservableObject {
             }
             
             if isWinkContinuing {
-                if duration >= 1.0 {
+                // ウィンク持続時間を1.0秒から0.3秒に短縮
+                if duration >= 0.3 {
                     if let lastScroll = lastScrollTime, Date().timeIntervalSince(lastScroll) < 1.5 {
+                        print("【ウィンク検出】: ⏳ クールダウン中（前回のスクロールから1.5秒待機）")
                     } else {
+                        print("【ウィンク検出】: ✅ ウィンク確定！スクロールを実行します (方向: \(eye == .left ? "⬆️ 上" : "⬇️ 下"))")
                         triggerScroll(for: eye)
                         winkState = .eyesOpen
                     }
                 }
             } else {
+                print("【ウィンク検出】: ❌ ウィンク中断（\(String(format: "%.2f", duration))秒後）")
                 winkState = .eyesOpen
             }
         }
@@ -249,6 +303,8 @@ class HandsFreeViewModel: NSObject, ObservableObject {
         lastScrollTime = Date()
         let direction: ScrollDirection = (eye == .right) ? .down : .up
         
+        print("【ウィンク検出】: 📨 スクロール要求を送信 - 方向: \(direction == .up ? "⬆️ 上" : "⬇️ 下")")
+        
         DispatchQueue.main.async {
             self.scrollRequest = ScrollRequest(direction: direction)
         }
@@ -256,6 +312,7 @@ class HandsFreeViewModel: NSObject, ObservableObject {
     
     private func resetWinkState() {
         winkState = .eyesOpen
+        print("【ウィンク検出】: 🔄 ウィンク状態をリセット")
     }
     
     private func calculateEyeOpenness(for eye: VNFaceLandmarkRegion2D?) -> CGFloat {
