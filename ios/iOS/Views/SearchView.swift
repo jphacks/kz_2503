@@ -1,54 +1,38 @@
-// Views/SearchView.swift
+//
+//  SearchView.swift
+//  iOS
+//
+//  Created by 三ツ井渚 on 2025/10/11.
+//
+
 import SwiftUI
 
 struct SearchView: View {
-    @StateObject private var vm = SearchViewModel()
-    @FocusState private var focused: Bool
-
     var body: some View {
-        VStack(spacing: 0) {
-            // ヘッダー＋検索バー
-            SearchHeader(
-                text: $vm.query,                           // ← SearchHeader の引数名に合わせる
-                onSubmit: { vm.submitSearch(); focused = false },
-                onClear: { vm.clearQuery() }
-            )
-            .focused($focused)
-
-            // 結果
-            ScrollView {
-                VStack(alignment: .leading, spacing: 12) {
-                    if let msg = vm.errorMessage {
-                        Text(msg)
-                            .font(.system(size: 14))
-                            .foregroundStyle(.secondary)
-                            .padding(.horizontal, 20)
-                            .padding(.top, 16)
-                    }
-
-                    if vm.titles.isEmpty, vm.errorMessage == nil {
-                        Text("レシピが見つかりませんでした。")
-                            .font(.system(size: 14))
-                            .foregroundStyle(.secondary)
-                            .padding(.horizontal, 20)
-                            .padding(.top, 24)
-                    } else {
-                        ForEach(vm.titles, id: \.self) { title in
-                            // 最小：タイトルだけ行表示
-                            Text(title)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(16)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 16)
-                                        .fill(Color.secondary.opacity(0.08))
-                                )
-                                .padding(.horizontal, 20)
-                        }
-                        .padding(.vertical, 12)
-                    }
-                }
-            }
+        VStack(spacing: 30) {
+            Spacer()
+            
+            Text("SearchView")
+                .font(.largeTitle)
+                .fontWeight(.medium)
+                .foregroundColor(.black)
+            
+            Text("ここに検索機能を実装します")
+                .font(.body)
+                .foregroundColor(.black)
+                .multilineTextAlignment(.center)
+                .padding()
+            
+            Spacer()
         }
-        .ignoresSafeArea(.keyboard, edges: .bottom)
+        .background(Color.white)
+        .navigationTitle("検索")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+#Preview {
+    NavigationStack {
+        SearchView()
     }
 }

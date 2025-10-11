@@ -174,15 +174,30 @@ func UpdateUserPassword(c *gin.Context) {
 func UpdateUserIcon(c *gin.Context) {
 	userID := c.Param("user_id")
 	var request struct {
-		Icon string `json:"icon"`
+		Icon     string `json:"icon"`
+		Username string `json:"username"`
 	}
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"status": 400, "message": "リクエストが無効です"})
 		return
 	}
 
-	updates := map[string]interface{}{
-		"icon": request.Icon,
+	updates := map[string]interface{}{}
+
+	// iconが提供されている場合は追加
+	if request.Icon != "" {
+		updates["icon"] = request.Icon
+	}
+
+	// usernameが提供されている場合は追加
+	if request.Username != "" {
+		updates["username"] = request.Username
+	}
+
+	// どちらも提供されていない場合はエラー
+	if len(updates) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"status": 400, "message": "iconまたはusernameのいずれかが必要です"})
+		return
 	}
 
 	err := userRepo.UpdateUser(userID, updates)
@@ -193,6 +208,6 @@ func UpdateUserIcon(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"status":  200,
-		"message": "アイコンを更新しました",
+		"message": "ユーザー情報を更新しました",
 	})
 }

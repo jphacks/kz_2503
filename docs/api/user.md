@@ -253,6 +253,7 @@ PATCH
 {
 	"user_id" : "123",
 	"Icon" : "https://imgur.com/a/dsfJeyk",
+	"username" : "kota"
 }
 ```
 

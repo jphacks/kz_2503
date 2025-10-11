@@ -18,8 +18,10 @@ class RegisterViewModel: ObservableObject {
     @Published var showResult: Bool = false
     @Published var resultType: ResultType = .none
     @Published var registrationSuccess: Bool = false
+    @Published var navigationDestination: NavigationDestination? = nil
     
     private let registerRepository = RegisterRepository()
+    private let userIdRepository = UserIdRepository()
     let email: String
     private let defaultUsername = "名無し"
     
@@ -31,6 +33,10 @@ class RegisterViewModel: ObservableObject {
         case none
         case success
         case error
+    }
+    
+    enum NavigationDestination: Hashable {
+        case profileSetting
     }
     
     func register() async {
@@ -68,8 +74,12 @@ class RegisterViewModel: ObservableObject {
         
         switch result {
         case .success(let userId):
+            // ユーザーIDをSwiftDataに保存
+            userIdRepository.saveUserId(userId)
             showResult(message: "新規登録が完了しました！ユーザーID: \(userId)", type: .success)
             registrationSuccess = true
+            // プロフィール設定画面に遷移
+            navigationDestination = .profileSetting
             
         case .error(let message):
             showResult(message: message, type: .error)
@@ -86,5 +96,9 @@ class RegisterViewModel: ObservableObject {
         showResult = false
         resultMessage = ""
         resultType = .none
+    }
+    
+    func resetNavigation() {
+        navigationDestination = nil
     }
 }
