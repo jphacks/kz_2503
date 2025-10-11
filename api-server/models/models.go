@@ -77,6 +77,43 @@ type FavoriteRecipe struct {
 	RecipeID string `json:"recipe_id"`
 }
 
+// カテゴリ
+type Category struct {
+	Value string `json:"value"`
+}
+
+// コメント
+type Comment struct {
+	CommentID string `json:"comment_id"`
+	UserID    string `json:"user_id"`
+	RecipeID  string `json:"recipe_id"`
+	Content   string `json:"content"`
+}
+
+// フォロー関係
+type Follow struct {
+	UserID     string `json:"user_id"`
+	FollowerID string `json:"follower_id"`
+}
+
+// ブロック関係
+type Block struct {
+	UserID    string `json:"user_id"`
+	BlockerID string `json:"blocker_id"`
+}
+
+// 通知
+type Notice struct {
+	Title   string `json:"title"`
+	Content string `json:"content"`
+}
+
+// 検索履歴
+type SearchHistory struct {
+	UserID string `json:"user_id"`
+	Word   string `json:"word"`
+}
+
 // レスポンス用の構造体
 type Response struct {
 	Status  int    `json:"status"`
@@ -118,6 +155,12 @@ type MockData struct {
 	Recipes         map[string]Recipe
 	Users           map[string]User
 	FavoriteRecipes map[string][]string // user_id -> recipe_ids
+	Categories      []Category
+	Comments        map[string]Comment  // comment_id -> comment
+	Follows         map[string][]string // user_id -> follower_ids
+	Blocks          map[string][]string // user_id -> blocker_ids
+	Notices         map[string][]Notice // user_id -> notices
+	SearchHistory   map[string][]string // user_id -> search_words
 	Mu              sync.RWMutex
 }
 
@@ -129,6 +172,12 @@ func InitMockData() {
 		Recipes:         make(map[string]Recipe),
 		Users:           make(map[string]User),
 		FavoriteRecipes: make(map[string][]string),
+		Categories:      []Category{},
+		Comments:        make(map[string]Comment),
+		Follows:         make(map[string][]string),
+		Blocks:          make(map[string][]string),
+		Notices:         make(map[string][]Notice),
+		SearchHistory:   make(map[string][]string),
 	}
 
 	// サンプルユーザーを作成
@@ -172,4 +221,35 @@ func InitMockData() {
 
 	// お気に入りレシピを追加
 	MockDB.FavoriteRecipes["123"] = []string{"123"}
+
+	// サンプルカテゴリを作成
+	MockDB.Categories = []Category{
+		{Value: "サラダ"},
+		{Value: "スープ"},
+		{Value: "メイン"},
+		{Value: "デザート"},
+		{Value: "飲み物"},
+	}
+
+	// サンプルコメントを作成
+	MockDB.Comments["comment_1"] = Comment{
+		CommentID: "comment_1",
+		UserID:    "123",
+		RecipeID:  "123",
+		Content:   "とても美味しかったです！",
+	}
+
+	// サンプルフォロー関係を作成
+	MockDB.Follows["123"] = []string{"456"}
+
+	// サンプル通知を作成
+	MockDB.Notices["123"] = []Notice{
+		{
+			Title:   "フォロー通知",
+			Content: "なぎささんからフォローされました",
+		},
+	}
+
+	// サンプル検索履歴を作成
+	MockDB.SearchHistory["123"] = []string{"とうもろこし", "カレー", "サラダ"}
 }

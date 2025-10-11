@@ -56,6 +56,56 @@ func main() {
 		user.PATCH("/icon/:user_id", handlers.UpdateUserIcon)
 	}
 
+	// カテゴリ関連のルート
+	r.GET("/category", handlers.GetCategories)
+
+	// コメント関連のルート
+	comment := r.Group("/comment")
+	{
+		comment.POST("/:recipe_id", handlers.CreateComment)
+		comment.PATCH("/:recipe_id", handlers.UpdateComment)
+		comment.DELETE("/:recipe_id", handlers.DeleteComment)
+	}
+
+	// フォロー関連のルート
+	follow := r.Group("/follow")
+	{
+		follow.POST("/:user_id", handlers.FollowUser)
+		follow.DELETE("/:user_id", handlers.UnfollowUser)
+		follow.GET("/:user_id", handlers.GetFollowers)
+	}
+
+	// ブロック関連のルート
+	block := r.Group("/block")
+	{
+		block.POST("/:user_id", handlers.BlockUser)
+		block.DELETE("/:user_id", handlers.UnblockUser)
+		block.GET("/:user_id", handlers.GetBlocks)
+	}
+
+	// 通知関連のルート
+	notice := r.Group("/notice")
+	{
+		notice.GET("/:user_id", handlers.GetNotices)
+		notice.PATCH("/:user_id", handlers.UpdateNoticeStatus)
+	}
+
+	// 設定関連のルート
+	settings := r.Group("/settings")
+	{
+		settings.PATCH("/wink/:user_id", handlers.UpdateWinkSetting)
+		settings.PATCH("/ai/:user_id", handlers.UpdateAISetting)
+		settings.PATCH("/location/:user_id", handlers.UpdateLocationSetting)
+	}
+
+	// 検索関連のルート
+	search := r.Group("/search")
+	{
+		search.GET("/:user_id", handlers.GetSearchHistory)
+		search.GET("/word/:word", handlers.SearchByWord)
+		search.GET("/category/:category_id", handlers.SearchByCategory)
+	}
+
 	// サーバーを起動
 	log.Println("Server starting on :8080")
 	if err := r.Run(":8080"); err != nil {

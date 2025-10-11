@@ -25,6 +25,38 @@
 - `PATCH /user/password/{user_id}` - パスワード更新
 - `PATCH /user/icon/{user_id}` - アイコン更新
 
+### カテゴリ関連API
+- `GET /category` - カテゴリ一覧取得
+
+### コメント関連API
+- `POST /comment/{recipe_id}` - コメント作成
+- `PATCH /comment/{recipe_id}` - コメント更新
+- `DELETE /comment/{recipe_id}` - コメント削除
+
+### フォロー関連API
+- `POST /follow/{user_id}` - フォロー
+- `DELETE /follow/{user_id}` - フォロー解除
+- `GET /follow/{user_id}` - フォロワー一覧取得
+
+### ブロック関連API
+- `POST /block/{user_id}` - ブロック
+- `DELETE /block/{user_id}` - ブロック解除
+- `GET /block/{user_id}` - ブロック一覧取得
+
+### 通知関連API
+- `GET /notice/{user_id}` - 通知取得
+- `PATCH /notice/{user_id}` - 通知既読更新
+
+### 設定関連API
+- `PATCH /settings/wink/{user_id}` - ウィンク設定更新
+- `PATCH /settings/ai/{user_id}` - AI設定更新
+- `PATCH /settings/location/{user_id}` - 地域設定更新
+
+### 検索関連API
+- `GET /search/{user_id}` - 検索履歴取得
+- `GET /search/word/{word}` - ワード検索
+- `GET /search/category/{category_id}` - カテゴリ検索
+
 ## 起動方法
 
 1. 依存関係をインストール
