@@ -4,4 +4,3 @@
 /api-server/supabase/
 /api-server/config.env
 /api-server/config.env.example
-/.DS_Store

@@ -333,11 +333,13 @@ func (r *SupabaseRepository) GetRecipe(recipeID string) (*models.Recipe, error) 
 	if len(results) > 0 {
 		recipeData := results[0]
 		recipe := models.Recipe{
-			RecipeID:   recipeData["id"].(string),
-			UserID:     recipeData["user_id"].(string),
-			CategoryID: recipeData["category_id"].(string),
-			Title:      recipeData["title"].(string),
-			Status:     recipeData["status"].(string),
+			RecipeID:       recipeData["id"].(string),
+			UserID:         recipeData["user_id"].(string),
+			CategoryID:     recipeData["category_id"].(string),
+			Title:          recipeData["title"].(string),
+			Status:         recipeData["status"].(string),
+			RecipeMaterial: []models.RecipeMaterial{}, // 空配列で初期化
+			RecipeContent:  []models.RecipeContent{},  // 空配列で初期化
 		}
 		if point, ok := recipeData["point"].(string); ok {
 			recipe.Point = point
@@ -348,6 +350,49 @@ func (r *SupabaseRepository) GetRecipe(recipeID string) (*models.Recipe, error) 
 		if servingCount, ok := recipeData["serving_count"].(float64); ok {
 			recipe.ServingCount = int(servingCount)
 		}
+
+		// recipe_materialを取得
+		materialEndpoint := fmt.Sprintf("%s/rest/v1/recipe_materials?recipe_id=eq.%s", r.baseURL, recipeID)
+		fmt.Printf("DEBUG: Fetching recipe_material from: %s\n", materialEndpoint)
+		materialResults, err := r.makeRequest("GET", materialEndpoint, nil)
+		if err != nil {
+			fmt.Printf("DEBUG: Error fetching recipe_material: %v\n", err)
+		} else {
+			fmt.Printf("DEBUG: Found %d recipe_material records\n", len(materialResults))
+			for i, materialData := range materialResults {
+				fmt.Printf("DEBUG: Material %d: %+v\n", i, materialData)
+				material := models.RecipeMaterial{
+					MaterialName:  materialData["material_name"].(string),
+					MaterialCount: materialData["material_count"].(string), // 修正: amount -> material_count
+				}
+				if unit, ok := materialData["material_unit"].(string); ok { // 修正: unit -> material_unit
+					material.MaterialUnit = unit
+				}
+				recipe.RecipeMaterial = append(recipe.RecipeMaterial, material)
+			}
+		}
+
+		// recipe_contentを取得
+		contentEndpoint := fmt.Sprintf("%s/rest/v1/recipe_contents?recipe_id=eq.%s", r.baseURL, recipeID)
+		fmt.Printf("DEBUG: Fetching recipe_content from: %s\n", contentEndpoint)
+		contentResults, err := r.makeRequest("GET", contentEndpoint, nil)
+		if err != nil {
+			fmt.Printf("DEBUG: Error fetching recipe_content: %v\n", err)
+		} else {
+			fmt.Printf("DEBUG: Found %d recipe_content records\n", len(contentResults))
+			for i, contentData := range contentResults {
+				fmt.Printf("DEBUG: Content %d: %+v\n", i, contentData)
+				content := models.RecipeContent{
+					Step:        int(contentData["step"].(float64)),
+					Description: contentData["description"].(string), // 修正: content -> description
+				}
+				if picture, ok := contentData["picture"].(string); ok { // 修正: picture_url -> picture
+					content.PictureURL = picture
+				}
+				recipe.RecipeContent = append(recipe.RecipeContent, content)
+			}
+		}
+
 		return &recipe, nil
 	}
 	return nil, fmt.Errorf("recipe not found")
