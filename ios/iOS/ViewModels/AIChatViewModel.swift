@@ -82,9 +82,12 @@ final class AIChatViewModel {
         switch result {
         case .success(let response):
             messages.append(.init(role: .assistant, text: response))
+            print("【AIChatViewModel】🤖 AI応答を受信: 「\(response.prefix(50))...」")
+            print("【AIChatViewModel】🔊 自動読み上げを開始します")
             aiRepository.speak(response)
         case .error(let error):
             errorMessage = error
+            print("【AIChatViewModel】❌ AI応答エラー: \(error)")
         }
     }
     
@@ -103,9 +106,12 @@ final class AIChatViewModel {
         switch result {
         case .success(let response):
             messages.append(.init(role: .assistant, text: response))
+            print("【AIChatViewModel】🤖 AI応答を受信: 「\(response.prefix(50))...」")
+            print("【AIChatViewModel】🔊 自動読み上げを開始します")
             aiRepository.speak(response)
         case .error(let error):
             errorMessage = error
+            print("【AIChatViewModel】❌ AI応答エラー: \(error)")
         }
     }
     
@@ -130,6 +136,7 @@ final class AIChatViewModel {
     }
     
     func speak(_ text: String) {
+        print("【AIChatViewModel】🔊 読み上げボタンから読み上げ: 「\(text.prefix(30))...」")
         aiRepository.speak(text)
     }
     
