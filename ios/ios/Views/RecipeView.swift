@@ -4,6 +4,7 @@ struct RecipeView: View {
     let recipeId: String?
     
     @State private var recipe: RecipeDetailData?
+    @State private var user: UserInfo?
     @State private var isLoading = true
     @State private var errorMessage: String?
     @State private var showHandsFreeSettings = false
@@ -14,6 +15,7 @@ struct RecipeView: View {
     @State private var aiViewModel = AIChatViewModel()
     
     private let recipeDetailRepository = RecipeDetailRepository()
+    private let userRepository = UserRepository()
     
     init(recipeId: String? = nil) {
         self.recipeId = recipeId
@@ -498,30 +500,7 @@ struct RecipeView: View {
     private func recipeContentBody(recipe: RecipeDetailData) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             // スクロールアンカー0（トップ）
-            Color.clear.frame(height: 1).id("fixed_anchor_0")
-            
-            VStack(alignment: .leading, spacing: 16) {
-                recipeHeaderView(recipe: recipe)
-                recipePointView(recipe: recipe)
-                recipeServingView(recipe: recipe)
-                recipeMaterialsView(recipe: recipe)
-                recipeStepsView(recipe: recipe)
-            }
-            .padding()
-            .background(
-                GeometryReader { geometry in
-                    Color.clear.preference(key: ContentHeightPreferenceKey.self, value: geometry.size.height)
-                }
-            )
-        }
-    }
-    
-    @ViewBuilder
-    private func recipeHeaderView(recipe: RecipeDetailData) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(recipe.title)
-                .font(.largeTitle)
-                .fontWeight(.bold)
+            Color.clear.frame(height: 0).id("fixed_anchor_0")
             
             AsyncImage(url: URL(string: recipe.pictureUrl)) { phase in
                 switch phase {
@@ -534,54 +513,132 @@ struct RecipeView: View {
             .frame(height: 200)
             .clipped()
             .cornerRadius(12)
+            .padding(0)
+            
+            VStack(alignment: .leading, spacing: 30) {
+                recipeTitleView(recipe: recipe)
+                
+                // ユーザー情報を表示
+                if let user = user {
+                    recipeUserView(recipe: recipe, user: user)
+                }
+                
+                // 画面並べる
+                recipeMaterialsView(recipe: recipe)
+                recipeStepsView(recipe: recipe)
+                recipePointView(recipe: recipe)
+                
+                // 下部に線を追加
+                Rectangle()
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(height: 1)
+                    .padding(0)
+                
+                recipeDatesView(recipe: recipe)
+            }
+            .padding(.horizontal, 30)
+            .padding(.vertical, 20)
+            .background(
+                GeometryReader { geometry in
+                    Color.clear.preference(key: ContentHeightPreferenceKey.self, value: geometry.size.height)
+                }
+            )
+        }
+    }
+    
+    @ViewBuilder
+    private func recipeTitleView(recipe: RecipeDetailData) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(recipe.title)
+                .font(.largeTitle)
+                .fontWeight(.bold)
         }
     }
     
     @ViewBuilder
     private func recipePointView(recipe: RecipeDetailData) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("ポイント")
-                .font(.headline)
+        VStack(alignment: .leading, spacing: 8) {
+            Text("レシピのポイント")
+                .font(.title2)
                 .fontWeight(.semibold)
+            
             Text(recipe.point)
-                .font(.body)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(Color.blue.opacity(0.1))
-                .cornerRadius(8)
+                .font(.title3)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+    
+    @ViewBuilder
+    private func recipeUserView(recipe: RecipeDetailData, user: UserInfo) -> some View {
+        HStack(spacing: 8) {
+            // アイコン
+            AsyncImage(url: URL(string: user.icon)) { phase in
+                switch phase {
+                case .success(let image):
+                    image.resizable().aspectRatio(contentMode: .fill)
+                default:
+                    Image("mock").resizable().aspectRatio(contentMode: .fill)
+                }
+            }
+            .frame(width: 40, height: 40)
+            .clipShape(Circle())
+            .overlay(Circle().stroke(Color.gray.opacity(0.3), lineWidth: 1))
+            
+            VStack(alignment: .leading, spacing: 2) {
+                // ユーザーネーム
+                Text(user.username)
+                    .font(.body)
+                    .fontWeight(.semibold)
+            }
+            
+            Spacer()
+        }
+        .padding(.vertical, 8)
     }
     
     @ViewBuilder
     private func recipeServingView(recipe: RecipeDetailData) -> some View {
         HStack {
             Text("分量: \(recipe.servingCount)人分")
-                .font(.subheadline)
                 .foregroundColor(.secondary)
             Spacer()
-            Text("ステータス: \(recipe.status)")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
         }
     }
     
     @ViewBuilder
     private func recipeMaterialsView(recipe: RecipeDetailData) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("材料")
-                .font(.headline)
-                .fontWeight(.semibold)
+            HStack {
+                Text("材料")
+                    .font(.title)
+                    .fontWeight(.semibold)
+                
+                Text("( \(recipe.servingCount)人分 )")
+                    .foregroundColor(.secondary)
+            }
             
-            ForEach(recipe.recipeMaterial ?? [], id: \.materialName) { material in
-                HStack {
-                    Text(material.materialName)
-                        .font(.body)
-                    Spacer()
-                    Text(material.materialCount)
-                        .font(.body)
-                        .foregroundColor(.secondary)
+            
+            VStack(spacing: 5) {
+                ForEach(recipe.recipeMaterial ?? [], id: \.materialName) { material in
+                    HStack {
+                        Text(material.materialName)
+                            .font(.body)
+                        Spacer()
+                        Text(material.materialCount)
+                            .font(.headline)
+                            .fontWeight(.black)
+                            .foregroundColor(.font)
+                    }
+                    .padding(.vertical, 2)
+                    
+                    Path { path in
+                        path.move(to: CGPoint(x: 0, y: 0))
+                        path.addLine(to: CGPoint(x: 400, y: 0)) // 横幅は適宜調整
+                    }
+                    .stroke(style: StrokeStyle(lineWidth: 1, dash: [4]))
+                    .frame(height: 1)
+                    .foregroundColor(.gray.opacity(0.5))
                 }
-                .padding(.vertical, 2)
             }
         }
     }
@@ -590,7 +647,7 @@ struct RecipeView: View {
     private func recipeStepsView(recipe: RecipeDetailData) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("作り方")
-                .font(.headline)
+                .font(.title)
                 .fontWeight(.semibold)
             
             ForEach(Array((recipe.recipeContent ?? []).enumerated()), id: \.element.step) { index, content in
@@ -601,6 +658,7 @@ struct RecipeView: View {
                 }
             }
         }
+        .padding(.vertical, 10)
     }
     
     @ViewBuilder
@@ -608,9 +666,10 @@ struct RecipeView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text("STEP \(content.step)")
-                    .font(.caption).fontWeight(.bold).foregroundColor(.white)
-                    .padding(.horizontal, 8).padding(.vertical, 4)
-                    .background(Color.orange).cornerRadius(4)
+                    .font(.body)
+                    .fontWeight(.black)
+                    .foregroundColor(.orange)
+                    .padding(.vertical, 4)
                 Spacer()
             }
             Text(content.description).font(.body)
@@ -629,6 +688,64 @@ struct RecipeView: View {
         .padding()
         .background(Color(.systemGray6))
         .cornerRadius(12)
+    }
+    
+    @ViewBuilder
+    private func recipeDatesView(recipe: RecipeDetailData) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("作成日: \(formatDate(recipe.createdAt))")
+                .font(.caption)
+                .foregroundColor(.secondary)
+            Text("更新日: \(formatDate(recipe.updatedAt))")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+    }
+    
+    // MARK: - Date Formatter Helper
+    private func formatDate(_ dateString: String) -> String {
+        print("🔍 フォーマット前の日付文字列: \(dateString)")
+        
+        // 試すフォーマットのリスト
+        let dateFormats = [
+            "yyyy-MM-dd'T'HH:mm:ss.SSSSSSZ",  // PostgreSQL with microseconds + timezone
+            "yyyy-MM-dd'T'HH:mm:ss.SSSZ",     // ISO 8601 with milliseconds
+            "yyyy-MM-dd'T'HH:mm:ssZ",         // ISO 8601 standard
+            "yyyy-MM-dd'T'HH:mm:ss",          // ISO 8601 without timezone
+            "yyyy-MM-dd HH:mm:ss.SSSSSS",     // PostgreSQL format
+            "yyyy-MM-dd HH:mm:ss",            // Simple datetime
+            "yyyy-MM-dd"                       // Date only
+        ]
+        
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        
+        // 各フォーマットを試す
+        for format in dateFormats {
+            formatter.dateFormat = format
+            if let date = formatter.date(from: dateString) {
+                let outputFormatter = DateFormatter()
+                outputFormatter.dateFormat = "yyyy/MM/dd"
+                let result = outputFormatter.string(from: date)
+                print("✅ フォーマット成功: \(result)")
+                return result
+            }
+        }
+        
+        // ISO8601DateFormatterも試す
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = isoFormatter.date(from: dateString) {
+            let outputFormatter = DateFormatter()
+            outputFormatter.dateFormat = "yyyy/MM/dd"
+            let result = outputFormatter.string(from: date)
+            print("✅ ISO8601フォーマット成功: \(result)")
+            return result
+        }
+        
+        print("❌ 日付のパースに失敗: \(dateString)")
+        return dateString // パースできない場合は元の文字列をそのまま返す
     }
     
     // MARK: - Voice Input Handler
@@ -670,8 +787,14 @@ struct RecipeView: View {
                     switch result {
                     case .success(let recipeResponse):
                         recipe = recipeResponse.recipe
-                        isLoading = false
                         print("✅ Recipe loaded successfully: \(recipeResponse.recipe.title)")
+                        
+                        // レシピが読み込まれたら、ユーザー情報も取得
+                        Task {
+                            await loadUserData(userId: recipeResponse.recipe.userId)
+                        }
+                        
+                        isLoading = false
                     case .error(let message):
                         errorMessage = message
                         isLoading = false
@@ -684,6 +807,22 @@ struct RecipeView: View {
             print("🔍 No recipe ID specified")
             errorMessage = "レシピIDが指定されていません"
             isLoading = false
+        }
+    }
+    
+    private func loadUserData(userId: String) async {
+        print("🔍 Loading user info for: \(userId)")
+        let result = await userRepository.getUserInfo(userId: userId)
+        
+        await MainActor.run {
+            switch result {
+            case .success(let userInfo):
+                user = userInfo
+                print("✅ User info loaded successfully: \(userInfo.username)")
+            case .error(let message):
+                print("❌ Failed to load user info: \(message)")
+                // ユーザー情報の読み込みに失敗しても、レシピは表示する
+            }
         }
     }
 }
