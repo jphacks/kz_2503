@@ -15,4 +15,11 @@ struct AIMessage: Identifiable, Codable {
     let id = UUID()
     let role: Role
     let text: String
+    let triggerWord: String? // トリガーワード（ユーザーメッセージの場合のみ使用）
+    
+    init(role: Role, text: String, triggerWord: String? = nil) {
+        self.role = role
+        self.text = text
+        self.triggerWord = triggerWord
+    }
 }

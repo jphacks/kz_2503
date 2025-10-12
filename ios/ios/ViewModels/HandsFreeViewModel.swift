@@ -22,6 +22,7 @@ class HandsFreeViewModel: NSObject, ObservableObject {
     @Published var voiceInputEnabled = false
     @Published var autoScrollEnabled = false // 自動スクロール（ウィンク検出）が有効かどうか
     @Published var latestVoiceText: String? // 音声入力でキャプチャした最新の文章（1つのみ）
+    @Published var latestTriggerWord: String? // 最新のトリガーワード
     
     // MARK: - Callback Properties
     var onScrollRequest: ((ScrollRequest) -> Void)?
@@ -81,6 +82,12 @@ class HandsFreeViewModel: NSObject, ObservableObject {
             self.latestVoiceText = capturedText
             self.onVoiceTextCaptured?(capturedText)
             print("【HandsFreeViewModel】: 📝 最新の音声テキストを更新: 「\(capturedText)」")
+        }
+        
+        voiceRecognitionService.onTriggerWordDetected = { [weak self] triggerWord in
+            guard let self = self else { return }
+            self.latestTriggerWord = triggerWord
+            print("【HandsFreeViewModel】: 🎯 トリガーワードを検出: 「\(triggerWord)」")
         }
     }
     
@@ -158,8 +165,9 @@ class HandsFreeViewModel: NSObject, ObservableObject {
     /// 最新の音声テキストをクリア
     func clearLatestVoiceText() {
         latestVoiceText = nil
+        latestTriggerWord = nil
         voiceRecognitionService.clearLatestText()
-        print("【HandsFreeViewModel】: 🗑️ 最新の音声テキストをクリアしました")
+        print("【HandsFreeViewModel】: 🗑️ 最新の音声テキストとトリガーワードをクリアしました")
     }
     
     // MARK: - Status Timer
