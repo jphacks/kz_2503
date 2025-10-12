@@ -14,7 +14,7 @@ class VoiceRecognitionService {
     private let triggerWords = [
         "うぃんくん", "ウィンくん", "ウィン君", "うぃん君",
         "winくん", "win君", "ういんくん", "ウイン君", "Wink", "ウィンク",
-        "ウインくん", "ういん君", "りんくん", "りん君", "林くん", "君", "ピンク"
+        "ウインくん", "ういん君", "りんくん", "りん君", "林くん", "君", "ピンク", "みくん", "み君", "みんくん"
     ]
     
     // コマンド検出の状態管理
@@ -36,6 +36,7 @@ class VoiceRecognitionService {
     
     // コールバック
     var onTextCaptured: ((String) -> Void)?
+    var onTriggerWordDetected: ((String) -> Void)?
     
     var isRecognizing: Bool {
         return audioEngine.isRunning
@@ -106,8 +107,20 @@ class VoiceRecognitionService {
         
         // オーディオセッションの設定（TTSと同時に使用できるように .playAndRecord を使用）
         let audioSession = AVAudioSession.sharedInstance()
-        try audioSession.setCategory(.playAndRecord, mode: .measurement, options: [.defaultToSpeaker, .allowBluetooth])
-        try audioSession.setActive(true, options: [])
+        
+        // 既に適切な設定がされている場合は再設定をスキップ
+        let currentCategory = audioSession.category
+        let needsConfiguration = currentCategory != .playAndRecord
+        
+        if needsConfiguration {
+            print("【音声認識】🔧 AVAudioSessionを設定します")
+            try audioSession.setCategory(.playAndRecord, mode: .measurement, options: [.defaultToSpeaker, .allowBluetooth])
+        }
+        
+        // セッションをアクティブ化（既にアクティブな場合はエラーにならない）
+        if !audioSession.isOtherAudioPlaying {
+            try audioSession.setActive(true, options: [])
+        }
         
         // 認識リクエストの作成
         recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
@@ -201,6 +214,11 @@ class VoiceRecognitionService {
         }
         
         print("【音声認識】: 🎯 キーワード「\(currentTrigger.triggerWord)」を検出しました！")
+        
+        // トリガーワード検出をコールバックで通知
+        DispatchQueue.main.async {
+            self.onTriggerWordDetected?(currentTrigger.triggerWord)
+        }
         
         // 現在のトリガー位置を保存（タイムアウト時に使用）
         currentTriggerPosition = currentTrigger
