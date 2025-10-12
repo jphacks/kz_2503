@@ -11,6 +11,7 @@ import Observation
 @Observable
 final class AIChatViewModel {
     var latestVoiceText: String? // 音声入力でキャプチャした最新の文章
+    var latestTriggerWord: String? // 最新のトリガーワード
     
     private let aiRepository: AIRepository
     private let voiceRecognitionService = VoiceRecognitionService()
@@ -93,11 +94,12 @@ final class AIChatViewModel {
     
     /// 音声入力からメッセージを送信（コンテキスト付き）
     @MainActor
-    func sendVoicePrompt(_ text: String, context: SystemPrompt.CookingContext = SystemPrompt.CookingContext()) async {
+    func sendVoicePrompt(_ text: String, context: SystemPrompt.CookingContext = SystemPrompt.CookingContext(), triggerWord: String? = nil) async {
         let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedText.isEmpty else { return }
         
-        messages.append(.init(role: .user, text: trimmedText))
+        // ユーザーメッセージを追加（トリガーワード情報を含む）
+        messages.append(.init(role: .user, text: trimmedText, triggerWord: triggerWord))
         isSending = true
         defer { isSending = false }
         
@@ -132,6 +134,7 @@ final class AIChatViewModel {
     /// 最新の音声テキストをクリア
     func clearLatestVoiceText() {
         latestVoiceText = nil
+        latestTriggerWord = nil
         voiceRecognitionService.clearLatestText()
     }
     
