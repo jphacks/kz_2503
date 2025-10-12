@@ -7,7 +7,7 @@ enum Environment {
     var baseURL: String {
         switch self {
         case .development:
-            return "https://296bd24e2dff.ngrok-free.app"
+            return "https://0927b0aa8cce.ngrok-free.app"
         case .production:
             return "https://api.wincook.com" // 本番環境のURL
         }
