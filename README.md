@@ -3,7 +3,7 @@
 </p>
 
 <h1 align="center">WinCook 👑</h1> <p align="center"> ウィンクでページ送り、AIと話しながら作るクッキングアプリ </p> 
-<p align="center"> <img src="https://img.shields.io/badge/iOS-17%2B-blue" alt="iOS 18+"> 
+<p align="center"> <img src="https://img.shields.io/badge/iOS-17%2B-blue" alt="iOS 26+"> 
   <img src="https://img.shields.io/badge/Swift-5.10%2B-orange" alt="Swift 5.10+"> 
   <img src="https://img.shields.io/badge/SwiftUI-✓-brightgreen" alt="SwiftUI"> 
   <img src="https://img.shields.io/badge/Vision-Wink%20Detection-lightgrey" alt="Vision Wink Detection"> </p>
